@@ -9,11 +9,31 @@ interface NavbarProps {
   onOpenGuide: () => void;
 }
 
+interface DiscordProfile {
+  id: string;
+  username: string;
+  globalName: string | null;
+  avatar: string | null;
+}
+
 export default function Navbar({ onOpenGuide }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<DiscordProfile | null>(null);
   const headerRef = useRef<HTMLElement>(null);
 
   const closeMenu = () => setIsMenuOpen(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((response) => response.json())
+      .then((data: { profile: DiscordProfile | null }) => setProfile(data.profile))
+      .catch(() => setProfile(null));
+  }, []);
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setProfile(null);
+  };
 
   // Close menu when clicking outside or pressing Escape
   useEffect(() => {
@@ -98,6 +118,30 @@ export default function Navbar({ onOpenGuide }: NavbarProps) {
             autoComplete="off"
           />
         </label>
+
+        {profile ? (
+          <div className="nav-profile">
+            <Image
+              src={
+                profile.avatar
+                  ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                  : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+              }
+              alt=""
+              width={32}
+              height={32}
+              unoptimized
+            />
+            <span>{profile.globalName || profile.username}</span>
+            <button type="button" onClick={logout} aria-label="ออกจากระบบ Discord">
+              ออก
+            </button>
+          </div>
+        ) : (
+          <a className="discord-login" href="/api/auth/discord">
+            เข้าสู่ระบบด้วย Discord
+          </a>
+        )}
 
         <button
           className={`menu-toggle${isMenuOpen ? " is-open" : ""}`}

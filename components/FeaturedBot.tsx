@@ -50,6 +50,16 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
             >
               ▣ &nbsp; ดูวิธีการใช้งาน
             </button>
+            {bot.name === "BOT-ROLE" && (
+              <button
+                className="outline-button"
+                type="button"
+                disabled
+                title="Dashboard กำลังเตรียมให้ใช้งาน"
+              >
+                ⚙ &nbsp; Edit Dashboard
+              </button>
+            )}
             <div className="bot-stats" aria-label="สถิติการใช้งานบอท">
               <span>
                 ♟ <b>ผู้ใช้งานทั้งหมด</b>

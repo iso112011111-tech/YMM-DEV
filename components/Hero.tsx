@@ -24,7 +24,7 @@ export default function Hero({ onOpenGuide }: HeroProps) {
           </p>
           <div className="hero-actions">
             <a className="discord-button" href="#bots">
-              <span>◉</span> เริ่มใช้งาน Discord <b>→</b>
+              <span>◉</span> เข้าสู่ระบบด้วย Discord <b>→</b>
             </a>
             <button
               className="outline-button"

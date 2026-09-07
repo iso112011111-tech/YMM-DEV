@@ -195,6 +195,64 @@ p {
   color: #75859e;
 }
 
+.discord-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #277ad8;
+  border-radius: 8px;
+  background: rgba(41, 130, 232, 0.12);
+  color: #d2e6ff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.discord-login:hover {
+  border-color: #4ba0ff;
+  background: rgba(41, 130, 232, 0.22);
+  color: #ffffff;
+}
+
+.nav-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #dbeaff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nav-profile img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nav-profile span {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-profile button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #86a2c4;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.nav-profile button:hover {
+  color: #ffffff;
+}
+
 .menu-toggle {
   display: none;
 }
@@ -271,6 +329,14 @@ p {
 
 .outline-button:active {
   transform: translateY(0);
+}
+
+.outline-button:disabled {
+  border-color: #29415f;
+  color: #6f829d;
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
 }
 
 /* =========================================

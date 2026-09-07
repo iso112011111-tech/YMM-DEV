@@ -38,6 +38,8 @@ export const SITE_CONFIG = {
       "https://discord.com/oauth2/authorize?client_id=1546202260558848010&permissions=8&integration_type=0&scope=bot",
     welcomeBotInvite:
       "https://discord.com/oauth2/authorize?client_id=1546427258711838741&permissions=8&integration_type=0&scope=bot",
+    roleBotInvite:
+      "https://discord.com/oauth2/authorize?client_id=1546475860478005268&permissions=8&integration_type=0&scope=bot",
   },
 } as const;
 
@@ -155,5 +157,30 @@ export const WELCOME_BOT: BotConfig = {
   ],
 };
 
-export const BOT_CATALOG: readonly BotConfig[] = [FEATURED_BOT, WELCOME_BOT];
+export const ROLE_BOT: BotConfig = {
+  name: "BOT-ROLE",
+  type: "BOT",
+  headline: "บอทจัดการยศและระบบสมาชิก",
+  description:
+    "จัดการยศในเซิร์ฟเวอร์ให้เป็นระบบ พร้อมดูแลสมาชิกและบันทึกกิจกรรมสำคัญแบบอัตโนมัติ",
+  tags: ["Role Management", "Admin Log", "Automation"],
+  features: [
+    "ตั้งค่าระบบแจ้งเตือนเมื่อมีสมาชิกเข้าหรือออกจากเซิร์ฟเวอร์",
+    "บันทึกกิจกรรมของแอดมินและการเปลี่ยนแปลงสำคัญในเซิร์ฟเวอร์",
+    "ส่งข้อความอัตโนมัติเมื่อสมาชิกได้รับยศ",
+    "จัดการและกำหนดค่าระบบยศได้อย่างสะดวก",
+  ],
+  stats: {
+    users: "พร้อมใช้งาน",
+    servers: "เพิ่มได้ทันที",
+  },
+  inviteUrl: SITE_CONFIG.links.roleBotInvite,
+  guideSteps: [],
+};
+
+export const BOT_CATALOG: readonly BotConfig[] = [
+  FEATURED_BOT,
+  WELCOME_BOT,
+  ROLE_BOT,
+];
 

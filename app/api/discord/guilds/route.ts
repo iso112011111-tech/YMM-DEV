@@ -79,7 +79,13 @@ export async function GET(request: Request) {
       const errText = await guildsRes.text();
       return NextResponse.json({ 
         guilds: [], 
-        error: `Discord ${guildsRes.status}: ${errText}` 
+        error: `Discord ${guildsRes.status}: ${errText}`,
+        debug: {
+          tokenStarts: INITIAL_TOKEN.slice(0, 15),
+          tokenEnds: INITIAL_TOKEN.slice(-5),
+          tokenLength: INITIAL_TOKEN.length,
+          hasEnv: Boolean(process.env.DISCORD_BOT_TOKEN)
+        }
       }, { status: 200 });
     }
 

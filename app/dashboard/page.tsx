@@ -306,83 +306,84 @@ export default function DashboardPage() {
 
           {/* Right Actions: Real Server Selector & Profile & Save Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            {/* Live Server Selector Dropdown */}
-            {(botGuilds.length > 0 || (profile?.guilds && profile.guilds.length > 0)) && !isCustomServer ? (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(13, 26, 45, 0.85)",
-                padding: "6px 14px",
-                borderRadius: "10px",
-                border: "1px solid rgba(139, 92, 246, 0.4)",
-                boxShadow: "0 0 10px rgba(139, 92, 246, 0.15)"
-              }}>
-                <span style={{ fontSize: "0.8rem", color: "#c4b5fd", fontWeight: 600 }}>🏰 เซิร์ฟเวอร์:</span>
-                <select
-                  value={config.guild_id}
-                  onChange={(e) => {
-                    const selectedVal = e.target.value;
-                    if (selectedVal === "custom") {
-                      setIsCustomServer(true);
-                    } else {
-                      const allList = botGuilds.length > 0 ? botGuilds : (profile?.guilds || []);
-                      const selected = allList.find((g) => g.id === selectedVal);
-                      setConfig((prev) => ({
-                        ...prev,
-                        guild_id: selectedVal,
-                        server_name: selected ? selected.name : prev.server_name
-                      }));
-                    }
-                  }}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: "0.9rem",
-                    fontWeight: 700,
-                    outline: "none",
-                    cursor: "pointer"
-                  }}
-                >
-                  {(botGuilds.length > 0 ? botGuilds : (profile?.guilds || [])).map((g) => (
-                    <option key={g.id} value={g.id} style={{ background: "#0d1a2d", color: "#fff" }}>
-                      🟢 {g.name}
-                    </option>
-                  ))}
-                  <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
-                    ✏️ ระบุ Server ID อื่นเอง...
-                  </option>
-                </select>
-              </div>
-            ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.2)" }}>
-                <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>Server ID:</span>
-                <input
-                  type="text"
-                  value={config.guild_id}
-                  onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                    width: "150px",
-                    outline: "none"
-                  }}
-                  placeholder="ID เซิร์ฟเวอร์..."
-                />
-                {botGuilds.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsCustomServer(false)}
-                    style={{ background: "transparent", border: "none", color: "#8ea4c3", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
+            {/* Live Server Selector Dropdown (Shown ONLY when logged in) */}
+            {profile && (
+              botGuilds.length > 0 && !isCustomServer ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "rgba(13, 26, 45, 0.85)",
+                  padding: "6px 14px",
+                  borderRadius: "10px",
+                  border: "1px solid rgba(139, 92, 246, 0.4)",
+                  boxShadow: "0 0 10px rgba(139, 92, 246, 0.15)"
+                }}>
+                  <span style={{ fontSize: "0.8rem", color: "#c4b5fd", fontWeight: 600 }}>🏰 เซิร์ฟเวอร์:</span>
+                  <select
+                    value={config.guild_id}
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      if (selectedVal === "custom") {
+                        setIsCustomServer(true);
+                      } else {
+                        const selected = botGuilds.find((g) => g.id === selectedVal);
+                        setConfig((prev) => ({
+                          ...prev,
+                          guild_id: selectedVal,
+                          server_name: selected ? selected.name : prev.server_name
+                        }));
+                      }
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#fff",
+                      fontSize: "0.9rem",
+                      fontWeight: 700,
+                      outline: "none",
+                      cursor: "pointer"
+                    }}
                   >
-                    กลับไปเลือกรายการ
-                  </button>
-                )}
-              </div>
+                    {botGuilds.map((g) => (
+                      <option key={g.id} value={g.id} style={{ background: "#0d1a2d", color: "#fff" }}>
+                        🟢 {g.name}
+                      </option>
+                    ))}
+                    <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
+                      ✏️ ระบุ Server ID อื่นเอง...
+                    </option>
+                  </select>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.2)" }}>
+                  <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>Server ID:</span>
+                  <input
+                    type="text"
+                    value={config.guild_id}
+                    onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#fff",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      width: "150px",
+                      outline: "none"
+                    }}
+                    placeholder="ID เซิร์ฟเวอร์..."
+                  />
+                  {botGuilds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomServer(false)}
+                      style={{ background: "transparent", border: "none", color: "#8ea4c3", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      กลับไปเลือกรายการ
+                    </button>
+                  )}
+                </div>
+              )
             )}
 
             {/* Discord User Profile Badge or Login Button */}
@@ -411,6 +412,32 @@ export default function DashboardPage() {
                 <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff" }}>
                   {profile.globalName || profile.username}
                 </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    setProfile(null);
+                    setConfig((prev) => ({
+                      ...prev,
+                      guild_id: "",
+                      server_name: ""
+                    }));
+                  }}
+                  style={{
+                    background: "rgba(239, 68, 68, 0.2)",
+                    border: "none",
+                    color: "#fca5a5",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    marginLeft: "4px"
+                  }}
+                  title="ออกจากระบบ Discord"
+                >
+                  ออก
+                </button>
               </div>
             ) : (
               <a

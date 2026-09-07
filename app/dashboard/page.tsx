@@ -104,7 +104,7 @@ function sanitizeConfig(data: any): DashboardConfig {
 
 export default function DashboardPage() {
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
-  const [activeTab, setActiveTab] = useState<"appearance" | "system" | "welcome" | "form" | "roles">("appearance");
+  const [activeTab, setActiveTab] = useState<"appearance" | "system" | "welcome" | "form" | "roles">("roles");
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [newEmoji, setNewEmoji] = useState("👑");
@@ -256,7 +256,7 @@ export default function DashboardPage() {
     setConfig((prev) => ({
       ...prev,
       reaction_roles: [
-        ...prev.reaction_roles,
+        ...(prev.reaction_roles || []),
         { emoji: newEmoji, roleName: roleNameToAdd, roleId: roleIdToAdd }
       ]
     }));
@@ -275,23 +275,23 @@ export default function DashboardPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#07111f",
-      color: "#eef5ff",
-      fontFamily: "var(--font-manrope), sans-serif",
+      background: "#0c1322",
+      color: "#f1f5f9",
+      fontFamily: "Inter, var(--font-manrope), sans-serif",
       paddingBottom: "80px"
     }}>
-      {/* Top Header Navbar */}
+      {/* Top Clean Header Navbar */}
       <header style={{
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(9, 21, 37, 0.95)",
+        background: "rgba(12, 19, 34, 0.95)",
         backdropFilter: "blur(14px)",
-        borderBottom: "1px solid rgba(72, 139, 222, 0.2)",
-        padding: "12px 24px"
+        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+        padding: "14px 28px"
       }}>
         <div style={{
-          maxWidth: "1300px",
+          maxWidth: "1350px",
           margin: "0 auto",
           display: "flex",
           alignItems: "center",
@@ -299,45 +299,29 @@ export default function DashboardPage() {
           flexWrap: "wrap",
           gap: "16px"
         }}>
-          {/* Brand Link */}
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
-              <Image src={logo} alt="YMM-DEV" width={36} height={36} style={{ borderRadius: "8px" }} />
-              <span style={{ fontWeight: 800, fontSize: "1.1rem", letterSpacing: "0.04em" }}>YMM-DEV</span>
+          {/* Brand Logo & Name */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#fff" }}>
+              <Image src={logo} alt="YMM-DEV" width={32} height={32} style={{ borderRadius: "8px" }} />
+              <span style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.01em" }}>YMM-DEV</span>
             </Link>
-            <span style={{ color: "#475569" }}>/</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{
-                background: "linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))",
-                border: "1px solid rgba(139, 92, 246, 0.4)",
-                padding: "4px 10px",
-                borderRadius: "20px",
-                fontSize: "0.8rem",
-                color: "#c4b5fd",
-                fontWeight: 600
-              }}>
-                👑 BOT-ROLE
-              </span>
-              <span style={{ fontWeight: 700, fontSize: "1rem" }}>Web Dashboard</span>
-            </div>
           </div>
 
-          {/* Right Actions: Real Server Selector & Profile & Save Button */}
+          {/* Right Actions: Server Selector, Profile & Save Settings Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            {/* Live Server Selector Dropdown (Shown ONLY when logged in) */}
+            {/* Live Server Selector Dropdown */}
             {profile && (
               botGuilds.length > 0 && !isCustomServer ? (
                 <div style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  background: "rgba(13, 26, 45, 0.85)",
-                  padding: "6px 14px",
+                  background: "rgba(255, 255, 255, 0.06)",
+                  padding: "6px 12px",
                   borderRadius: "10px",
-                  border: "1px solid rgba(139, 92, 246, 0.4)",
-                  boxShadow: "0 0 10px rgba(139, 92, 246, 0.15)"
+                  border: "1px solid rgba(255, 255, 255, 0.1)"
                 }}>
-                  <span style={{ fontSize: "0.8rem", color: "#c4b5fd", fontWeight: 600 }}>🏰 เซิร์ฟเวอร์:</span>
+                  <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontWeight: 500 }}>Server:</span>
                   <select
                     value={config.guild_id}
                     onChange={(e) => {
@@ -357,25 +341,25 @@ export default function DashboardPage() {
                       background: "transparent",
                       border: "none",
                       color: "#fff",
-                      fontSize: "0.9rem",
-                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
                       outline: "none",
                       cursor: "pointer"
                     }}
                   >
                     {botGuilds.map((g) => (
-                      <option key={g.id} value={g.id} style={{ background: "#0d1a2d", color: "#fff" }}>
-                        🟢 {g.name}
+                      <option key={g.id} value={g.id} style={{ background: "#0c1322", color: "#fff" }}>
+                        {g.name}
                       </option>
                     ))}
-                    <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
-                      ✏️ ระบุ Server ID อื่นเอง...
+                    <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
+                      Custom Server ID...
                     </option>
                   </select>
                 </div>
               ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.2)" }}>
-                  <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>Server ID:</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255, 255, 255, 0.06)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+                  <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Server ID:</span>
                   <input
                     type="text"
                     value={config.guild_id}
@@ -395,25 +379,25 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setIsCustomServer(false)}
-                      style={{ background: "transparent", border: "none", color: "#8ea4c3", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
+                      style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
                     >
-                      กลับไปเลือกรายการ
+                      ย้อนกลับ
                     </button>
                   )}
                 </div>
               )
             )}
 
-            {/* Discord User Profile Badge or Login Button */}
+            {/* Profile Avatar Badge */}
             {profile ? (
               <div style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "rgba(13, 26, 45, 0.8)",
-                padding: "4px 12px",
+                background: "rgba(255, 255, 255, 0.06)",
+                padding: "4px 10px",
                 borderRadius: "20px",
-                border: "1px solid rgba(72, 139, 222, 0.2)"
+                border: "1px solid rgba(255, 255, 255, 0.1)"
               }}>
                 <Image
                   src={
@@ -427,9 +411,6 @@ export default function DashboardPage() {
                   style={{ borderRadius: "50%" }}
                   unoptimized
                 />
-                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff" }}>
-                  {profile.globalName || profile.username}
-                </span>
                 <button
                   type="button"
                   onClick={async () => {
@@ -442,17 +423,13 @@ export default function DashboardPage() {
                     }));
                   }}
                   style={{
-                    background: "rgba(239, 68, 68, 0.2)",
+                    background: "transparent",
                     border: "none",
-                    color: "#fca5a5",
+                    color: "#94a3b8",
                     fontSize: "0.75rem",
-                    fontWeight: 600,
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    marginLeft: "4px"
+                    cursor: "pointer"
                   }}
-                  title="ออกจากระบบ Discord"
+                  title="ออกจากระบบ"
                 >
                   ออก
                 </button>
@@ -461,57 +438,50 @@ export default function DashboardPage() {
               <a
                 href="/api/auth/discord?redirect=/dashboard"
                 style={{
-                  background: "#5865F2",
+                  background: "#2563EB",
                   color: "#fff",
-                  padding: "6px 14px",
+                  padding: "8px 16px",
                   borderRadius: "8px",
-                  fontSize: "0.8rem",
+                  fontSize: "0.85rem",
                   fontWeight: 600,
                   textDecoration: "none",
                   display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px"
+                  alignItems: "center"
                 }}
               >
-                <span>🎮</span> เข้าสู่ระบบ Discord
+                Log In Discord
               </a>
             )}
 
-            {/* Save Button */}
+            {/* Clean Save Settings Button (Matching screenshot) */}
             <button
               onClick={handleSave}
               disabled={saving || (!loadingAuth && !loadingGuilds && !isAccessible)}
-              title={(!loadingAuth && !loadingGuilds && !isAccessible) ? "ไม่สามารถบันทึกได้ กรุณาเข้าสู่ระบบและติดตั้งบอทในเซิร์ฟเวอร์" : "บันทึกการตั้งค่า"}
               style={{
                 background: (saving || (!loadingAuth && !loadingGuilds && !isAccessible))
                   ? "#334155" 
-                  : `linear-gradient(135deg, ${config.theme_color}, #2563EB)`,
-                color: (!loadingAuth && !loadingGuilds && !isAccessible) ? "#94a3b8" : "#fff",
+                  : "#2563EB",
+                color: "#fff",
                 border: "none",
                 padding: "8px 20px",
-                borderRadius: "10px",
-                fontWeight: 700,
+                borderRadius: "8px",
+                fontWeight: 600,
                 fontSize: "0.9rem",
                 cursor: (saving || (!loadingAuth && !loadingGuilds && !isAccessible)) ? "not-allowed" : "pointer",
-                boxShadow: isAccessible ? `0 4px 15px ${config.theme_color}44` : "none",
-                opacity: (!loadingAuth && !loadingGuilds && !isAccessible) ? 0.6 : 1,
-                transition: "all 0.2s ease",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px"
+                transition: "all 0.2s ease"
               }}
             >
-              {saving ? "⏳ กำลังบันทึก..." : "💾 บันทึกการตั้งค่า"}
+              {saving ? "Saving..." : "Save Settings"}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area Wrapper */}
+      {/* Main Content Area */}
       <div style={{
-        maxWidth: "1300px",
+        maxWidth: "1350px",
         margin: "24px auto",
-        padding: "0 24px",
+        padding: "0 28px",
         position: "relative"
       }}>
         {/* Permission Protection Gray Overlay */}
@@ -519,10 +489,10 @@ export default function DashboardPage() {
           <div style={{
             position: "absolute",
             top: 0,
-            left: "24px",
-            right: "24px",
+            left: "28px",
+            right: "28px",
             bottom: 0,
-            background: "rgba(7, 17, 31, 0.78)",
+            background: "rgba(12, 19, 34, 0.85)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
             zIndex: 40,
@@ -534,19 +504,18 @@ export default function DashboardPage() {
             minHeight: "520px"
           }}>
             <div style={{
-              background: "rgba(13, 26, 45, 0.95)",
-              border: "1px solid rgba(139, 92, 246, 0.4)",
+              background: "#131d31",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
               borderRadius: "20px",
               padding: "40px 32px",
               maxWidth: "520px",
               width: "100%",
               textAlign: "center",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.2)"
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)"
             }}>
               {!isLoggedIn ? (
                 <>
-                  <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🔒</div>
-                  <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fff", marginBottom: "10px" }}>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>
                     คุณยังไม่ได้เข้าสู่ระบบ Discord
                   </h2>
                   <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "28px" }}>
@@ -555,30 +524,27 @@ export default function DashboardPage() {
                   <a
                     href="/api/auth/discord?redirect=/dashboard"
                     style={{
-                      background: "linear-gradient(135deg, #5865F2, #4752C4)",
+                      background: "#2563EB",
                       color: "#fff",
                       padding: "12px 28px",
-                      borderRadius: "12px",
+                      borderRadius: "10px",
                       fontSize: "1rem",
-                      fontWeight: 700,
+                      fontWeight: 600,
                       textDecoration: "none",
                       display: "inline-flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      boxShadow: "0 4px 15px rgba(88, 101, 242, 0.4)"
+                      alignItems: "center"
                     }}
                   >
-                    <span>🎮</span> เข้าสู่ระบบด้วย Discord
+                    Log In Discord
                   </a>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🤖</div>
-                  <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fff", marginBottom: "10px" }}>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>
                     ไม่พบบอทในเซิร์ฟเวอร์นี้
                   </h2>
                   <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "24px" }}>
-                    เซิร์ฟเวอร์ที่คุณเลือกยังไม่ได้ติดตั้งบอท <b style={{ color: "#c4b5fd" }}>YMM_ROLE</b><br />
+                    เซิร์ฟเวอร์ที่คุณเลือกยังไม่ได้ติดตั้งบอท <b style={{ color: "#fff" }}>YMM_ROLE</b><br />
                     กรุณาเชิญบอทเข้าสู่เซิร์ฟเวอร์ก่อน จึงจะสามารถตั้งค่าระบบรับยศและบันทึกข้อมูลได้ครับ
                   </p>
                   <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -587,43 +553,17 @@ export default function DashboardPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        background: "linear-gradient(135deg, #8B5CF6, #3B82F6)",
+                        background: "#2563EB",
                         color: "#fff",
                         padding: "12px 24px",
-                        borderRadius: "12px",
-                        fontSize: "0.95rem",
-                        fontWeight: 700,
-                        textDecoration: "none",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        boxShadow: "0 4px 15px rgba(139, 92, 246, 0.4)"
-                      }}
-                    >
-                      <span>➕</span> เชิญบอทเข้าเซิร์ฟเวอร์นี้
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLoadingGuilds(true);
-                        fetch("/api/discord/guilds")
-                          .then((r) => r.json())
-                          .then((d) => { if (d.guilds) setBotGuilds(d.guilds); })
-                          .finally(() => setLoadingGuilds(false));
-                      }}
-                      style={{
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        color: "#e2e8f0",
-                        padding: "12px 20px",
-                        borderRadius: "12px",
+                        borderRadius: "10px",
                         fontSize: "0.95rem",
                         fontWeight: 600,
-                        cursor: "pointer"
+                        textDecoration: "none"
                       }}
                     >
-                      🔄 ตรวจสอบใหม่อีกครั้ง
-                    </button>
+                      เชิญบอทเข้าเซิร์ฟเวอร์
+                    </a>
                   </div>
                 </>
               )}
@@ -631,965 +571,662 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Main Two-Column Grid Area */}
+        {/* Main Two-Column Grid Layout */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "1.2fr 1fr",
           gap: "28px",
           alignItems: "start",
           filter: (!loadingAuth && !loadingGuilds && !isAccessible) ? "grayscale(80%) blur(2px)" : "none",
-          pointerEvents: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto",
-          userSelect: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto",
-          transition: "filter 0.3s ease"
+          pointerEvents: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto"
         }}>
-        {/* Left Column: Configuration Forms */}
-        <div>
-          {/* Notification Toast */}
-          {saveStatus === "success" && (
+          {/* Left Column: Config Panels & Navigation Pills */}
+          <div>
+            {/* Save Toast Status */}
+            {saveStatus === "success" && (
+              <div style={{
+                background: "rgba(16, 185, 129, 0.15)",
+                border: "1px solid #10B981",
+                color: "#34D399",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                marginBottom: "20px",
+                fontSize: "0.9rem",
+                fontWeight: 600
+              }}>
+                บันทึกการตั้งค่าสำเร็จ! ข้อมูลถูกอัปเดตเรียลไทม์เรียบร้อยแล้ว
+              </div>
+            )}
+
+            {/* Clean Modern Navigation Tabs Bar (Matching Reference Screenshot) */}
             <div style={{
-              background: "rgba(16, 185, 129, 0.15)",
-              border: "1px solid #10B981",
-              color: "#34D399",
-              padding: "12px 16px",
-              borderRadius: "12px",
-              marginBottom: "20px",
               display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              fontWeight: 600,
-              fontSize: "0.9rem"
+              gap: "6px",
+              background: "#131d31",
+              padding: "6px",
+              borderRadius: "14px",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              marginBottom: "24px"
             }}>
-              ✅ บันทึกข้อมูลขึ้น Firebase Firestore สำเร็จ! บอทจะ Sync ข้อมูลนี้ไปใช้งานทันที
-            </div>
-          )}
-
-          {saveStatus === "error" && (
-            <div style={{
-              background: "rgba(239, 68, 68, 0.15)",
-              border: "1px solid #EF4444",
-              color: "#F87171",
-              padding: "12px 16px",
-              borderRadius: "12px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              fontWeight: 600,
-              fontSize: "0.9rem"
-            }}>
-              ❌ เกิดข้อผิดพลาดในการบันทึก กรุณาตรวจสอบการตั้งค่า Firebase
-            </div>
-          )}
-
-          {/* Navigation Tabs */}
-          <div style={{
-            display: "flex",
-            gap: "8px",
-            background: "rgba(13, 26, 45, 0.9)",
-            padding: "6px",
-            borderRadius: "14px",
-            border: "1px solid rgba(72, 139, 222, 0.2)",
-            marginBottom: "24px",
-            overflowX: "auto"
-          }}>
-            {[
-              { id: "appearance", label: "🎨 ธีมและสี", desc: "Theme & Color" },
-              { id: "system", label: "⚡ ระบบรับยศและห้อง", desc: "Channels & System" },
-              { id: "welcome", label: "💌 ข้อความต้อนรับ", desc: "Welcome DM" },
-              { id: "form", label: "📋 แบบฟอร์ม", desc: "Form Setup" },
-              { id: "roles", label: "👑 ผูก Emoji / Role", desc: "Role Mapping" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                style={{
-                  flex: 1,
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  border: "none",
-                  background: activeTab === tab.id 
-                    ? `linear-gradient(135deg, ${config.theme_color}33, rgba(45, 140, 255, 0.15))`
-                    : "transparent",
-                  color: activeTab === tab.id ? "#fff" : "#8ea4c3",
-                  fontWeight: activeTab === tab.id ? 700 : 500,
-                  fontSize: "0.85rem",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.2s ease",
-                  borderBottom: activeTab === tab.id ? `2px solid ${config.theme_color}` : "2px solid transparent"
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab 1: Appearance & Theme Color */}
-          {activeTab === "appearance" && (
-            <div style={{
-              background: "rgba(13, 26, 45, 0.75)",
-              backdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: "1px solid rgba(72, 139, 222, 0.25)"
-            }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>🎨 ตั้งค่าธีมสีและชื่อเซิร์ฟเวอร์</h2>
-              <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                สีและชื่อเซิร์ฟเวอร์นี้จะถูกนำไปใช้ใน Discord Embed ทุกชิ้นที่บอทส่ง
-              </p>
-
-              {/* Server Display Name */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  ชื่อเซิร์ฟเวอร์ (Server Name)
-                </label>
-                <input
-                  type="text"
-                  value={config.server_name}
-                  onChange={(e) => setConfig({ ...config, server_name: e.target.value })}
+              {[
+                { id: "appearance", label: "🎨 Theme" },
+                { id: "system", label: "⚙️ System" },
+                { id: "welcome", label: "💬 Welcome" },
+                { id: "form", label: "📄 Forms" },
+                { id: "roles", label: "🔗 Emoji / Role" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   style={{
-                    width: "100%",
-                    background: "rgba(7, 17, 31, 0.8)",
-                    border: "1px solid rgba(72, 139, 222, 0.3)",
-                    color: "#fff",
+                    flex: 1,
                     padding: "10px 14px",
                     borderRadius: "10px",
-                    fontSize: "0.95rem",
-                    outline: "none"
+                    border: "none",
+                    background: activeTab === tab.id ? "rgba(255, 255, 255, 0.12)" : "transparent",
+                    color: activeTab === tab.id ? "#ffffff" : "#94a3b8",
+                    fontWeight: activeTab === tab.id ? 700 : 500,
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px"
                   }}
-                  placeholder="เช่น YMM DEV..."
-                />
-              </div>
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-              {/* Theme Color Picker */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  สีธีมหลักของบอท (Primary Embed Color)
-                </label>
+            {/* TAB 1: Theme & Color Settings */}
+            {activeTab === "appearance" && (
+              <div style={{
+                background: "#131d31",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Theme & Color Configuration</h2>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
+                  เลือกสีธีมหลักสำหรับแผงรับยศ Embed ใน Discord
+                </p>
 
-                {/* Preset Palettes */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "12px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
                   {PRESET_COLORS.map((preset) => (
                     <button
                       key={preset.hex}
                       type="button"
                       onClick={() => setConfig({ ...config, theme_color: preset.hex })}
                       style={{
+                        background: "rgba(255, 255, 255, 0.04)",
+                        border: config.theme_color === preset.hex ? `2px solid ${preset.hex}` : "1px solid rgba(255, 255, 255, 0.08)",
+                        borderRadius: "10px",
+                        padding: "12px",
+                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        gap: "10px",
-                        background: config.theme_color === preset.hex ? "rgba(255, 255, 255, 0.1)" : "rgba(7, 17, 31, 0.6)",
-                        border: config.theme_color === preset.hex ? `2px solid ${preset.hex}` : "1px solid rgba(72, 139, 222, 0.2)",
-                        padding: "8px 12px",
-                        borderRadius: "10px",
-                        color: "#fff",
-                        cursor: "pointer",
-                        fontSize: "0.85rem",
-                        fontWeight: 600
+                        gap: "10px"
                       }}
                     >
-                      <span style={{
-                        width: "18px",
-                        height: "18px",
-                        borderRadius: "50%",
-                        background: preset.hex,
-                        boxShadow: `0 0 8px ${preset.hex}`
-                      }} />
-                      {preset.name}
+                      <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: preset.hex }} />
+                      <span style={{ fontSize: "0.85rem", color: "#fff", fontWeight: 600 }}>{preset.name}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Custom Hex input */}
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <input
-                    type="color"
-                    value={config.theme_color}
-                    onChange={(e) => setConfig({ ...config, theme_color: e.target.value })}
-                    style={{
-                      width: "42px",
-                      height: "42px",
-                      border: "none",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      background: "transparent"
-                    }}
-                  />
-                  <input
-                    type="text"
-                    value={config.theme_color}
-                    onChange={(e) => setConfig({ ...config, theme_color: e.target.value })}
-                    style={{
-                      flex: 1,
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
-                      outline: "none"
-                    }}
-                    placeholder="#8B5CF6"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 2: System Mode & Real Channels Selection */}
-          {activeTab === "system" && (
-            <div style={{
-              background: "rgba(13, 26, 45, 0.75)",
-              backdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: "1px solid rgba(72, 139, 222, 0.25)"
-            }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>⚡ รูปแบบระบบและเลือกห้องสำหรับบอท</h2>
-              <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                เลือกระบบรับยศ และระบุห้องที่ต้องการให้บอทส่งข้อความ/บันทึก Log ในเซิร์ฟเวอร์
-              </p>
-
-              {/* Mode Select */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
-                {[
-                  { type: "both", title: "เปิดทั้งสองระบบ", icon: "✨", desc: "Emoji & Form พร้อมกัน" },
-                  { type: "emoji", title: "กด Emoji เท่านั้น", icon: "🏆", desc: "คลิก Emoji ได้รับยศทันที" },
-                  { type: "form", title: "กรอกฟอร์มเท่านั้น", icon: "📋", desc: "กรอกข้อมูลยืนยันตัวตน" }
-                ].map((mode) => (
-                  <button
-                    key={mode.type}
-                    type="button"
-                    onClick={() => setConfig({ ...config, system_type: mode.type as DashboardConfig["system_type"] })}
-                    style={{
-                      background: config.system_type === mode.type ? `linear-gradient(135deg, ${config.theme_color}22, rgba(45, 140, 255, 0.15))` : "rgba(7, 17, 31, 0.6)",
-                      border: config.system_type === mode.type ? `2px solid ${config.theme_color}` : "1px solid rgba(72, 139, 222, 0.2)",
-                      padding: "14px 12px",
-                      borderRadius: "12px",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      color: "#fff"
-                    }}
-                  >
-                    <div style={{ fontSize: "1.6rem", marginBottom: "6px" }}>{mode.icon}</div>
-                    <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{mode.title}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#8ea4c3", marginTop: "4px" }}>{mode.desc}</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Channel Selector for Role Panel */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  📍 ห้องสำหรับส่งแผงรับยศ (Role Panel Channel)
-                </label>
-                {channels.length > 0 ? (
-                  <select
-                    value={config.panel_channel_id || ""}
-                    onChange={(e) => setConfig({ ...config, panel_channel_id: e.target.value })}
-                    style={{
-                      width: "100%",
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
-                      outline: "none"
-                    }}
-                  >
-                    <option value="" style={{ background: "#0d1a2d" }}>-- เลือกห้องข้อความในเซิร์ฟเวอร์ --</option>
-                    {channels.map((ch) => (
-                      <option key={ch.id} value={ch.id} style={{ background: "#0d1a2d" }}>
-                        #{ch.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={config.panel_channel_id || ""}
-                    onChange={(e) => setConfig({ ...config, panel_channel_id: e.target.value })}
-                    style={{
-                      width: "100%",
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
-                      outline: "none"
-                    }}
-                    placeholder="ระบุ Channel ID เช่น 1546477485904892004"
-                  />
-                )}
-                <span style={{ fontSize: "0.75rem", color: "#8ea4c3", display: "block", marginTop: "4px" }}>
-                  * ห้องที่บอทจะส่ง Embed แผงรับยศให้สมาชิกมากดรับ
-                </span>
-              </div>
-
-              {/* Log Channel Selector */}
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  📢 ห้องสำหรับแจ้งเตือน Admin Log (Log Channel)
-                </label>
-                {channels.length > 0 ? (
-                  <select
-                    value={config.log_channel_id}
-                    onChange={(e) => setConfig({ ...config, log_channel_id: e.target.value })}
-                    style={{
-                      width: "100%",
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
-                      outline: "none"
-                    }}
-                  >
-                    <option value="" style={{ background: "#0d1a2d" }}>-- เลือกห้องแจ้งเตือน Log --</option>
-                    {channels.map((ch) => (
-                      <option key={ch.id} value={ch.id} style={{ background: "#0d1a2d" }}>
-                        #{ch.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={config.log_channel_id}
-                    onChange={(e) => setConfig({ ...config, log_channel_id: e.target.value })}
-                    style={{
-                      width: "100%",
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
-                      outline: "none"
-                    }}
-                    placeholder="ระบุ Channel ID สำหรับ Log เช่น 1546477565785546813"
-                  />
-                )}
-                <span style={{ fontSize: "0.75rem", color: "#8ea4c3", display: "block", marginTop: "4px" }}>
-                  * บอทจะส่ง Embed แจ้งเตือนแอดมินทุกครั้งที่มีสมาชิกได้รับยศเข้ามาที่ห้องนี้
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 3: Welcome DM Message */}
-          {activeTab === "welcome" && (
-            <div style={{
-              background: "rgba(13, 26, 45, 0.75)",
-              backdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: "1px solid rgba(72, 139, 222, 0.25)"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <div>
-                  <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>💌 ข้อความต้อนรับส่วนตัว (Welcome DM)</h2>
-                  <p style={{ color: "#8ea4c3", fontSize: "0.85rem" }}>ส่งข้อความ Embed เข้ากล่องข้อความส่วนตัวของสมาชิกทันทีหลังได้รับยศ</p>
-                </div>
-
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Custom Hex Code</label>
                   <input
-                    type="checkbox"
-                    checked={config.welcome_enabled}
-                    onChange={(e) => setConfig({ ...config, welcome_enabled: e.target.checked })}
-                    style={{ width: "18px", height: "18px", accentColor: config.theme_color }}
-                  />
-                  เปิดใช้งาน DM
-                </label>
-              </div>
-
-              {/* Welcome Title */}
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  หัวข้อข้อความ (Title)
-                </label>
-                <input
-                  type="text"
-                  value={config.welcome_title}
-                  onChange={(e) => setConfig({ ...config, welcome_title: e.target.value })}
-                  style={{
-                    width: "100%",
-                    background: "rgba(7, 17, 31, 0.8)",
-                    border: "1px solid rgba(72, 139, 222, 0.3)",
-                    color: "#fff",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    fontSize: "0.95rem",
-                    outline: "none"
-                  }}
-                />
-              </div>
-
-              {/* Welcome Description */}
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  เนื้อหาข้อความ (Description)
-                </label>
-                <textarea
-                  rows={5}
-                  value={config.welcome_message}
-                  onChange={(e) => setConfig({ ...config, welcome_message: e.target.value })}
-                  style={{
-                    width: "100%",
-                    background: "rgba(7, 17, 31, 0.8)",
-                    border: "1px solid rgba(72, 139, 222, 0.3)",
-                    color: "#fff",
-                    padding: "12px 14px",
-                    borderRadius: "10px",
-                    fontSize: "0.9rem",
-                    lineHeight: 1.5,
-                    outline: "none",
-                    resize: "vertical"
-                  }}
-                />
-              </div>
-
-              {/* Variables Helper */}
-              <div style={{ background: "rgba(7, 17, 31, 0.6)", padding: "12px 16px", borderRadius: "10px", fontSize: "0.8rem", color: "#8ea4c3" }}>
-                💡 <b>ตัวแปรที่ใช้งานได้:</b> <code style={{ color: "#c4b5fd" }}>&#123;user&#125;</code> = ชื่อสมาชิก, <code style={{ color: "#c4b5fd" }}>&#123;role&#125;</code> = ยศที่ได้รับ, <code style={{ color: "#c4b5fd" }}>&#123;server&#125;</code> = ชื่อเซิร์ฟเวอร์
-              </div>
-            </div>
-          )}
-
-          {/* Tab 4: Form Verification Setup */}
-          {activeTab === "form" && (
-            <div style={{
-              background: "rgba(13, 26, 45, 0.75)",
-              backdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: "1px solid rgba(72, 139, 222, 0.25)"
-            }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>📋 ตั้งค่าแบบฟอร์มยืนยันตัวตน</h2>
-              <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                กำหนดหัวข้อฟอร์มและเลือก Role ที่จะแจกเมื่อสมาชิกส่งข้อมูลสำเร็จ
-              </p>
-
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  หัวข้อฟอร์ม (Form Title)
-                </label>
-                <input
-                  type="text"
-                  value={config.form_title}
-                  onChange={(e) => setConfig({ ...config, form_title: e.target.value })}
-                  style={{
-                    width: "100%",
-                    background: "rgba(7, 17, 31, 0.8)",
-                    border: "1px solid rgba(72, 139, 222, 0.3)",
-                    color: "#fff",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    fontSize: "0.95rem",
-                    outline: "none"
-                  }}
-                />
-              </div>
-
-              {/* Form Target Role Dropdown */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  🎯 Role ที่จะมอบให้เมื่อส่งฟอร์มสำเร็จ (Target Role)
-                </label>
-                {roles.length > 0 ? (
-                  <select
-                    value={config.form_role_id}
-                    onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
+                    type="text"
+                    value={config.theme_color}
+                    onChange={(e) => setConfig({ ...config, theme_color: e.target.value })}
                     style={{
                       width: "100%",
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      background: "#0c1322",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "#fff",
                       padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
+                      borderRadius: "8px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: System Settings */}
+            {activeTab === "system" && (
+              <div style={{
+                background: "#131d31",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>System Settings</h2>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
+                  กำหนดรูปแบบระบบรับยศและเลือกช่องสำหรับส่ง Admin Log
+                </p>
+
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Admin Log Channel</label>
+                  <select
+                    value={config.log_channel_id}
+                    onChange={(e) => setConfig({ ...config, log_channel_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "#0c1322",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
                       outline: "none"
                     }}
                   >
-                    {roles.map((r) => (
-                      <option key={r.id} value={r.id} style={{ background: "#0d1a2d" }}>
-                        @{r.name} ({r.id})
+                    {channels.map((ch) => (
+                      <option key={ch.id} value={ch.id} style={{ background: "#0c1322" }}>
+                        #{ch.name}
                       </option>
                     ))}
                   </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={config.form_role_id}
-                    onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
-                    style={{
-                      width: "100%",
-                      background: "rgba(7, 17, 31, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      fontSize: "0.95rem",
-                      outline: "none"
-                    }}
-                    placeholder="เช่น 1546299207269224521"
-                  />
-                )}
-              </div>
-
-              {/* Form Questions */}
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  รายการช่องกรอกข้อมูลใน Modal
-                </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {(config.form_questions || []).map((q, idx) => (
-                    <div key={idx} style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      background: "rgba(7, 17, 31, 0.6)",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(72, 139, 222, 0.2)"
-                    }}>
-                      <span style={{ color: "#8ea4c3", fontSize: "0.85rem", width: "24px" }}>#{idx + 1}</span>
-                      <input
-                        type="text"
-                        value={q}
-                        onChange={(e) => {
-                          const updated = [...(config.form_questions || [])];
-                          updated[idx] = e.target.value;
-                          setConfig({ ...config, form_questions: updated });
-                        }}
-                        style={{
-                          flex: 1,
-                          background: "transparent",
-                          border: "none",
-                          color: "#fff",
-                          fontSize: "0.9rem",
-                          outline: "none"
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setConfig({
-                            ...config,
-                            form_questions: (config.form_questions || []).filter((_, i) => i !== idx)
-                          });
-                        }}
-                        style={{
-                          background: "rgba(239, 68, 68, 0.2)",
-                          border: "none",
-                          color: "#F87171",
-                          padding: "4px 8px",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          fontSize: "0.75rem"
-                        }}
-                      >
-                        ลบ
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfig({ ...config, form_questions: [...config.form_questions, "คำถามใหม่..."] });
-                    }}
-                    style={{
-                      background: "rgba(139, 92, 246, 0.15)",
-                      border: "1px dashed rgba(139, 92, 246, 0.4)",
-                      color: "#c4b5fd",
-                      padding: "8px",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      marginTop: "6px"
-                    }}
-                  >
-                    + เพิ่มคำถาม
-                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Tab 5: Role & Emoji Mappings with Role Dropdown */}
-          {activeTab === "roles" && (
-            <div style={{
-              background: "rgba(13, 26, 45, 0.75)",
-              backdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: "1px solid rgba(72, 139, 222, 0.25)"
-            }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>👑 ผูก Emoji กับ Role</h2>
-              <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                กำหนดว่าเมื่อสมาชิกกด Emoji แต่ละตัว จะได้รับยศอะไร โดยเลือก Role จากเซิร์ฟเวอร์ได้ทันที
-              </p>
-
-              {/* Add New Mapping Form */}
+            {/* TAB 3: Welcome DM Settings */}
+            {activeTab === "welcome" && (
               <div style={{
-                background: "rgba(7, 17, 31, 0.7)",
-                padding: "16px",
-                borderRadius: "12px",
-                border: "1px solid rgba(139, 92, 246, 0.3)",
-                marginBottom: "20px"
+                background: "#131d31",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
               }}>
-                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#c4b5fd", marginBottom: "12px" }}>➕ เพิ่มการผูก Role ใหม่</div>
-                <div style={{ display: "grid", gridTemplateColumns: "80px 1fr auto", gap: "10px", alignItems: "center" }}>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Welcome Message Settings</h2>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
+                  ส่งข้อความต้อนรับเข้ากล่องข้อความส่วนตัว (DM) เมื่อสมาชิกรับยศสำเร็จ
+                </p>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Title</label>
                   <input
                     type="text"
-                    value={newEmoji}
-                    onChange={(e) => setNewEmoji(e.target.value)}
-                    placeholder="👑"
+                    value={config.welcome_title}
+                    onChange={(e) => setConfig({ ...config, welcome_title: e.target.value })}
                     style={{
-                      background: "rgba(13, 26, 45, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      width: "100%",
+                      background: "#0c1322",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "#fff",
-                      padding: "8px",
+                      padding: "10px 14px",
                       borderRadius: "8px",
-                      fontSize: "1.2rem",
-                      textAlign: "center",
                       outline: "none"
                     }}
                   />
+                </div>
 
-                  {roles.length > 0 && selectedRoleId !== "custom" ? (
-                    <select
-                      value={selectedRoleId}
-                      onChange={(e) => setSelectedRoleId(e.target.value)}
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Message</label>
+                  <textarea
+                    rows={4}
+                    value={config.welcome_message}
+                    onChange={(e) => setConfig({ ...config, welcome_message: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "#0c1322",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      outline: "none",
+                      resize: "vertical"
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: Form Setup */}
+            {activeTab === "form" && (
+              <div style={{
+                background: "#131d31",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Modal Form Setup</h2>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
+                  ตั้งค่าแบบฟอร์มยืนยันตัวตนสำหรับสมาชิกก่อนรับยศ
+                </p>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Form Title</label>
+                  <input
+                    type="text"
+                    value={config.form_title}
+                    onChange={(e) => setConfig({ ...config, form_title: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "#0c1322",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: Role Automation / Emoji & Role Mapping (Matching Reference Image) */}
+            {activeTab === "roles" && (
+              <div style={{
+                background: "#131d31",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "1.1rem", color: "#fff" }}>🔗</span>
+                  <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#fff" }}>Role Automation (Configure)</h2>
+                </div>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
+                  กำหนดว่าเมื่อสมาชิกกด Emoji แต่ละตัว จะได้รับบทบาทอะไร โดยเลือก Role จากเซิร์ฟเวอร์ได้ทันที
+                </p>
+
+                {/* Inner Card: Add New Role Link */}
+                <div style={{
+                  background: "#17233c",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  marginBottom: "24px"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", fontWeight: 600, color: "#fff", marginBottom: "12px" }}>
+                    <span>🔗</span> Add New Role Link
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "48px 1fr 90px", gap: "10px", alignItems: "center" }}>
+                    {/* Emoji input square box */}
+                    <input
+                      type="text"
+                      value={newEmoji}
+                      onChange={(e) => setNewEmoji(e.target.value)}
+                      placeholder="😊"
                       style={{
-                        background: "rgba(13, 26, 45, 0.8)",
-                        border: "1px solid rgba(72, 139, 222, 0.3)",
+                        width: "48px",
+                        height: "42px",
+                        background: "#0f172a",
+                        border: "1px solid rgba(255, 255, 255, 0.12)",
                         color: "#fff",
-                        padding: "10px 12px",
                         borderRadius: "8px",
-                        fontSize: "0.9rem",
+                        fontSize: "1.2rem",
+                        textAlign: "center",
                         outline: "none"
                       }}
-                    >
-                      {roles.map((r) => (
-                        <option key={r.id} value={r.id} style={{ background: "#0d1a2d" }}>
-                          @{r.name}
+                    />
+
+                    {/* Role selector dropdown */}
+                    {roles.length > 0 && selectedRoleId !== "custom" ? (
+                      <select
+                        value={selectedRoleId}
+                        onChange={(e) => setSelectedRoleId(e.target.value)}
+                        style={{
+                          height: "42px",
+                          background: "#0f172a",
+                          border: "1px solid rgba(255, 255, 255, 0.12)",
+                          color: "#fff",
+                          padding: "0 14px",
+                          borderRadius: "8px",
+                          fontSize: "0.9rem",
+                          outline: "none",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {roles.map((r) => (
+                          <option key={r.id} value={r.id} style={{ background: "#0c1322" }}>
+                            @{r.name}
+                          </option>
+                        ))}
+                        <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
+                          Custom Role ID...
                         </option>
-                      ))}
-                      <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
-                        ✏️ พิมพ์ Role ID เอง...
-                      </option>
-                    </select>
-                  ) : (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <input
-                        type="text"
-                        value={customRoleName}
-                        onChange={(e) => setCustomRoleName(e.target.value)}
-                        placeholder="ชื่อ Role"
-                        style={{
-                          flex: 1,
-                          background: "rgba(13, 26, 45, 0.8)",
-                          border: "1px solid rgba(72, 139, 222, 0.3)",
-                          color: "#fff",
-                          padding: "8px 12px",
-                          borderRadius: "8px",
-                          fontSize: "0.85rem",
-                          outline: "none"
-                        }}
-                      />
-                      <input
-                        type="text"
-                        value={customRoleId}
-                        onChange={(e) => setCustomRoleId(e.target.value)}
-                        placeholder="Role ID"
-                        style={{
-                          flex: 1,
-                          background: "rgba(13, 26, 45, 0.8)",
-                          border: "1px solid rgba(72, 139, 222, 0.3)",
-                          color: "#fff",
-                          padding: "8px 12px",
-                          borderRadius: "8px",
-                          fontSize: "0.85rem",
-                          outline: "none"
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={addRoleMapping}
-                    style={{
-                      background: `linear-gradient(135deg, ${config.theme_color}, #3B82F6)`,
-                      color: "#fff",
-                      border: "none",
-                      padding: "10px 18px",
-                      borderRadius: "8px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontSize: "0.85rem"
-                    }}
-                  >
-                    เพิ่ม
-                  </button>
-                </div>
-              </div>
-
-              {/* Existing Mappings List */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {config.reaction_roles.map((item, idx) => (
-                  <div key={idx} style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    background: "rgba(7, 17, 31, 0.6)",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(72, 139, 222, 0.2)"
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ fontSize: "1.4rem" }}>{item.emoji}</span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{item.roleName}</div>
-                        <div style={{ fontSize: "0.75rem", color: "#8ea4c3" }}>ID: {item.roleId}</div>
+                      </select>
+                    ) : (
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <input
+                          type="text"
+                          value={customRoleName}
+                          onChange={(e) => setCustomRoleName(e.target.value)}
+                          placeholder="Role Name"
+                          style={{
+                            flex: 1,
+                            height: "42px",
+                            background: "#0f172a",
+                            border: "1px solid rgba(255, 255, 255, 0.12)",
+                            color: "#fff",
+                            padding: "0 12px",
+                            borderRadius: "8px",
+                            fontSize: "0.85rem",
+                            outline: "none"
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={customRoleId}
+                          onChange={(e) => setCustomRoleId(e.target.value)}
+                          placeholder="Role ID"
+                          style={{
+                            flex: 1,
+                            height: "42px",
+                            background: "#0f172a",
+                            border: "1px solid rgba(255, 255, 255, 0.12)",
+                            color: "#fff",
+                            padding: "0 12px",
+                            borderRadius: "8px",
+                            fontSize: "0.85rem",
+                            outline: "none"
+                          }}
+                        />
                       </div>
-                    </div>
+                    )}
 
+                    {/* Add button */}
                     <button
                       type="button"
-                      onClick={() => removeRoleMapping(idx)}
+                      onClick={addRoleMapping}
                       style={{
-                        background: "rgba(239, 68, 68, 0.15)",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        color: "#F87171",
-                        padding: "4px 10px",
-                        borderRadius: "6px",
+                        height: "42px",
+                        background: "#2563EB",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontWeight: 600,
                         cursor: "pointer",
-                        fontSize: "0.8rem",
-                        fontWeight: 600
+                        fontSize: "0.9rem"
                       }}
                     >
-                      ลบ
+                      Add
                     </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+                </div>
 
-        {/* Right Column: Live Interactive Discord Embed Preview */}
-        <div style={{
-          position: "sticky",
-          top: "84px"
-        }}>
-          <div style={{
-            background: "rgba(13, 26, 45, 0.8)",
-            backdropFilter: "blur(20px)",
-            borderRadius: "18px",
-            border: "1px solid rgba(72, 139, 222, 0.25)",
-            padding: "20px"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#c4b5fd" }}>👁️ Live Discord Preview (ตัวอย่างสด)</span>
-              <span style={{
-                background: "rgba(16, 185, 129, 0.2)",
-                color: "#34D399",
-                fontSize: "0.75rem",
-                padding: "2px 8px",
-                borderRadius: "10px",
-                fontWeight: 600
-              }}>
-                Real-time
-              </span>
-            </div>
-
-            {/* Preview Sub-tabs */}
-            <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
-              {[
-                { id: "emoji_panel", label: "Emoji Panel" },
-                { id: "form_panel", label: "Form Panel" },
-                { id: "welcome_dm", label: "Welcome DM" },
-              ].map((pTab) => (
-                <button
-                  key={pTab.id}
-                  onClick={() => setPreviewTab(pTab.id as typeof previewTab)}
-                  style={{
-                    flex: 1,
-                    padding: "6px 8px",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: previewTab === pTab.id ? "rgba(255, 255, 255, 0.15)" : "rgba(7, 17, 31, 0.6)",
-                    color: previewTab === pTab.id ? "#fff" : "#8ea4c3",
+                {/* Table Header & Existing Mappings List */}
+                <div style={{ marginTop: "10px" }}>
+                  {/* Table Header Labels */}
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "60px 1.5fr 2fr 70px",
+                    padding: "0 14px 10px 14px",
                     fontSize: "0.75rem",
-                    fontWeight: 600,
-                    cursor: "pointer"
-                  }}
-                >
-                  {pTab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Discord Embed Simulator Card */}
-            <div style={{
-              background: "#313338",
-              borderRadius: "12px",
-              padding: "16px",
-              fontFamily: "'Inter', sans-serif"
-            }}>
-              {/* Bot Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                <div style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  background: config.theme_color,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.1rem"
-                }}>
-                  🤖
-                </div>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>YMM_ROLE</span>
-                    <span style={{
-                      background: "#5865F2",
-                      color: "#fff",
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      padding: "1px 4px",
-                      borderRadius: "3px"
-                    }}>
-                      BOT
-                    </span>
+                    fontWeight: 700,
+                    color: "#64748b",
+                    letterSpacing: "0.05em"
+                  }}>
+                    <span>EMOJI</span>
+                    <span>ROLE</span>
+                    <span>ID</span>
+                    <span style={{ textAlign: "right" }}></span>
                   </div>
-                  <span style={{ fontSize: "0.7rem", color: "#949BA4" }}>วันนี้เวลา 20:25</span>
+
+                  {/* Mapping Rows */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {(config.reaction_roles || []).map((item, idx) => (
+                      <div key={idx} style={{
+                        display: "grid",
+                        gridTemplateColumns: "60px 1.5fr 2fr 70px",
+                        alignItems: "center",
+                        background: "#17233c",
+                        padding: "12px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid rgba(255, 255, 255, 0.06)"
+                      }}>
+                        <span style={{ fontSize: "1.3rem" }}>{item.emoji}</span>
+                        <div>
+                          <span style={{
+                            background: "rgba(59, 130, 246, 0.2)",
+                            color: "#60a5fa",
+                            padding: "3px 10px",
+                            borderRadius: "14px",
+                            fontSize: "0.85rem",
+                            fontWeight: 600
+                          }}>
+                            @{item.roleName}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "#94a3b8", fontFamily: "monospace" }}>
+                          ID: {item.roleId}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <button
+                            type="button"
+                            onClick={() => removeRoleMapping(idx)}
+                            style={{
+                              background: "rgba(239, 68, 68, 0.2)",
+                              border: "none",
+                              color: "#fca5a5",
+                              padding: "4px 12px",
+                              borderRadius: "6px",
+                              cursor: "pointer",
+                              fontSize: "0.75rem",
+                              fontWeight: 600
+                            }}
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Simulated Embed */}
-              <div style={{
-                background: "#2B2D31",
-                borderLeft: `4px solid ${config.theme_color}`,
-                borderRadius: "4px",
-                padding: "12px 14px",
-                boxShadow: `0 2px 10px rgba(0,0,0,0.2)`
-              }}>
-                {previewTab === "emoji_panel" && (
-                  <>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                      👑 ระบบรับยศอัตโนมัติ | Emoji Role
-                    </div>
-                    <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
-                      ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ <b>{config.server_name}</b><br />
-                      กดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨
-                    </div>
+          {/* Right Column: Live Discord Preview Card */}
+          <div style={{ position: "sticky", top: "84px" }}>
+            <div style={{
+              background: "#131d31",
+              borderRadius: "16px",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              padding: "20px"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>Live Discord Preview</span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.2)",
+                  color: "#34D399",
+                  fontSize: "0.75rem",
+                  padding: "3px 10px",
+                  borderRadius: "12px",
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}>
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#34D399" }} /> Live
+                </span>
+              </div>
 
-                    {/* Role Mappings display */}
-                    <div style={{
-                      background: "rgba(0,0,0,0.2)",
+              {/* Preview Sub-tabs */}
+              <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
+                {[
+                  { id: "emoji_panel", label: "Emoji Panel" },
+                  { id: "form_panel", label: "Form Panel" },
+                  { id: "welcome_dm", label: "Welcome DM" },
+                ].map((pTab) => (
+                  <button
+                    key={pTab.id}
+                    onClick={() => setPreviewTab(pTab.id as typeof previewTab)}
+                    style={{
+                      flex: 1,
                       padding: "8px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.8rem",
-                      color: "#DBDEE1",
-                      lineHeight: 1.6,
-                      marginBottom: "8px"
-                    }}>
-                      {(config.reaction_roles || []).map((r, i) => (
-                        <div key={i}>
-                          {r.emoji} ➔ <span style={{ color: config.theme_color || '#8B5CF6', fontWeight: 600 }}>@{r.roleName}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {previewTab === "form_panel" && (
-                  <>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                      📋 {config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ'}
-                    </div>
-                    <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
-                      ยินดีต้อนรับเข้าสู่ <b>{config.server_name || 'Server'}</b><br />
-                      กรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ
-                    </div>
-                    <div style={{
-                      background: "#5865F2",
-                      color: "#fff",
-                      padding: "6px 12px",
-                      borderRadius: "4px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: previewTab === pTab.id ? "rgba(255, 255, 255, 0.12)" : "rgba(12, 19, 34, 0.6)",
+                      color: previewTab === pTab.id ? "#fff" : "#94a3b8",
                       fontSize: "0.8rem",
                       fontWeight: 600,
-                      marginTop: "6px"
-                    }}>
-                      📋 กรอกข้อมูลเพื่อรับยศ
-                    </div>
-                  </>
-                )}
-
-                {previewTab === "welcome_dm" && (
-                  <>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                      {(config.welcome_title || "").replace("{server}", config.server_name || "Server")}
-                    </div>
-                    <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
-                      {(config.welcome_message || "")
-                        .replace("{user}", "@สมาชิก")
-                        .replace("{role}", (config.reaction_roles || [])[0]?.roleName || "MEMBERS")
-                        .replace("{server}", config.server_name || "Server")}
-                    </div>
-                  </>
-                )}
-
-                {/* Embed Footer */}
-                <div style={{
-                  fontSize: "0.7rem",
-                  color: "#949BA4",
-                  marginTop: "12px",
-                  borderTop: "1px solid rgba(255,255,255,0.06)",
-                  paddingTop: "6px"
-                }}>
-                  Discord Role Bot • {config.server_name || "Server"}
-                </div>
+                      cursor: "pointer"
+                    }}
+                  >
+                    {pTab.label}
+                  </button>
+                ))}
               </div>
 
-              {/* Reaction Buttons Simulator */}
-              {previewTab === "emoji_panel" && (
-                <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" }}>
-                  {(config.reaction_roles || []).map((r, i) => (
-                    <div key={i} style={{
-                      background: "rgba(43, 45, 49, 0.8)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      padding: "3px 8px",
-                      borderRadius: "6px",
-                      fontSize: "0.8rem",
-                      color: "#DBDEE1",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}>
-                      <span>{r.emoji}</span>
-                      <span>{(i + 1) * 4}</span>
+              {/* Discord Embed Simulator Card */}
+              <div style={{
+                background: "#313338",
+                borderRadius: "12px",
+                padding: "16px",
+                fontFamily: "'Inter', sans-serif"
+              }}>
+                {/* Bot Header */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                  <div style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    background: config.theme_color || "#3B82F6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.1rem"
+                  }}>
+                    🤖
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>YMM_ROLE</span>
+                      <span style={{
+                        background: "#5865F2",
+                        color: "#fff",
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        padding: "1px 4px",
+                        borderRadius: "3px"
+                      }}>
+                        BOT
+                      </span>
                     </div>
-                  ))}
+                    <span style={{ fontSize: "0.7rem", color: "#949BA4" }}>วันนี้เวลา 20:25</span>
+                  </div>
                 </div>
-              )}
+
+                {/* Simulated Embed */}
+                <div style={{
+                  background: "#2B2D31",
+                  borderLeft: `4px solid ${config.theme_color || '#3B82F6'}`,
+                  borderRadius: "4px",
+                  padding: "12px 14px"
+                }}>
+                  {previewTab === "emoji_panel" && (
+                    <>
+                      <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
+                        👑 ระบบรับยศอัตโนมัติ | Emoji Role
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
+                        ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ <b>{config.server_name || "Server"}</b><br />
+                        กดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨
+                      </div>
+
+                      <div style={{
+                        background: "rgba(0,0,0,0.2)",
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        color: "#DBDEE1",
+                        lineHeight: 1.6,
+                        marginBottom: "8px"
+                      }}>
+                        {(config.reaction_roles || []).map((r, i) => (
+                          <div key={i}>
+                            {r.emoji} ➔ <span style={{ color: config.theme_color || '#3B82F6', fontWeight: 600 }}>@{r.roleName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {previewTab === "form_panel" && (
+                    <>
+                      <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
+                        📋 {config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ'}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
+                        ยินดีต้อนรับเข้าสู่ <b>{config.server_name || 'Server'}</b><br />
+                        กรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ
+                      </div>
+                      <div style={{
+                        background: "#5865F2",
+                        color: "#fff",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        marginTop: "6px"
+                      }}>
+                        📋 กรอกข้อมูลเพื่อรับยศ
+                      </div>
+                    </>
+                  )}
+
+                  {previewTab === "welcome_dm" && (
+                    <>
+                      <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
+                        {(config.welcome_title || "").replace("{server}", config.server_name || "Server")}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                        {(config.welcome_message || "")
+                          .replace("{user}", "@สมาชิก")
+                          .replace("{role}", (config.reaction_roles || [])[0]?.roleName || "MEMBERS")
+                          .replace("{server}", config.server_name || "Server")}
+                      </div>
+                    </>
+                  )}
+
+                  <div style={{
+                    fontSize: "0.7rem",
+                    color: "#949BA4",
+                    marginTop: "12px",
+                    borderTop: "1px solid rgba(255,255,255,0.06)",
+                    paddingTop: "6px"
+                  }}>
+                    Discord Role Bot • {config.server_name || "Server"}
+                  </div>
+                </div>
+
+                {/* Reaction Simulator */}
+                {previewTab === "emoji_panel" && (
+                  <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" }}>
+                    {(config.reaction_roles || []).map((r, i) => (
+                      <div key={i} style={{
+                        background: "rgba(43, 45, 49, 0.8)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        padding: "3px 8px",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        color: "#DBDEE1",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px"
+                      }}>
+                        <span>{r.emoji}</span>
+                        <span>{(i + 1) * 4}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import logo from "@/app/img/logo.png";
 import { SITE_CONFIG } from "@/data/siteData";
 
@@ -87,6 +88,19 @@ export default function Navbar({ onOpenGuide }: NavbarProps) {
           <a href="#bots" onClick={closeMenu}>
             บอททั้งหมด
           </a>
+          <Link
+            href="/dashboard"
+            onClick={closeMenu}
+            style={{
+              color: "#c4b5fd",
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px"
+            }}
+          >
+            <span>⚙</span> Dashboard
+          </Link>
           <button
             className="nav-guide"
             type="button"

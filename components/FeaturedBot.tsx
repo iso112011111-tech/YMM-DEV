@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { BOT_CATALOG, type BotConfig } from "@/data/siteData";
 
 interface FeaturedBotProps {
@@ -69,14 +70,20 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
               ▣ &nbsp; ดูวิธีการใช้งาน
             </button>
             {bot.name === "BOT-ROLE" && (
-              <button
+              <Link
                 className="outline-button"
-                type="button"
-                disabled
-                title="Dashboard กำลังเตรียมให้ใช้งาน"
+                href="/dashboard"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
+                  borderColor: "rgba(139, 92, 246, 0.5)",
+                  color: "#c4b5fd"
+                }}
               >
                 ⚙ &nbsp; Edit Dashboard
-              </button>
+              </Link>
             )}
             <div className="bot-stats" aria-label="สถิติการใช้งานบอท">
               <span>

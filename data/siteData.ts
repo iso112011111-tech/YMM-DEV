@@ -40,6 +40,7 @@ export const SITE_CONFIG = {
       "https://discord.com/oauth2/authorize?client_id=1546427258711838741&permissions=8&integration_type=0&scope=bot",
     roleBotInvite:
       "https://discord.com/oauth2/authorize?client_id=1546475860478005268&permissions=8&integration_type=0&scope=bot",
+    roleBotDashboard: "https://ymm-dev.vercel.app/dashboard",
   },
 } as const;
 

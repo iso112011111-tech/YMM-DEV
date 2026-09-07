@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { BOT_CATALOG, type BotConfig } from "@/data/siteData";
 
 interface FeaturedBotProps {
@@ -5,6 +8,15 @@ interface FeaturedBotProps {
 }
 
 export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((response) => response.json())
+      .then((data: { profile: unknown }) => setIsLoggedIn(Boolean(data.profile)))
+      .catch(() => setIsLoggedIn(false));
+  }, []);
+
   return (
     <section className="bot-list shell" id="bots" aria-label="บอทแนะนำ">
       {BOT_CATALOG.map((bot, index) => (
@@ -37,8 +49,8 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
           <div className="bot-actions">
             <a
               className="discord-button"
-              href={bot.inviteUrl}
-              target="_blank"
+              href={isLoggedIn ? bot.inviteUrl : "/api/auth/discord"}
+              target={isLoggedIn ? "_blank" : undefined}
               rel="noopener noreferrer"
             >
               <span>◉</span> เพิ่มบอทในเซิร์ฟเวอร์ <b>→</b>

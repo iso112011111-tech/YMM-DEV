@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { type BotConfig } from "@/data/siteData";
 
 interface GuideModalProps {
@@ -10,6 +10,7 @@ interface GuideModalProps {
 }
 
 export default function GuideModal({ bot, isOpen, onClose }: GuideModalProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -20,6 +21,11 @@ export default function GuideModal({ bot, isOpen, onClose }: GuideModalProps) {
   );
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((response) => response.json())
+      .then((data: { profile: unknown }) => setIsLoggedIn(Boolean(data.profile)))
+      .catch(() => setIsLoggedIn(false));
+
     if (!isOpen) return;
 
     // Prevent body scroll when modal is open
@@ -84,8 +90,8 @@ export default function GuideModal({ bot, isOpen, onClose }: GuideModalProps) {
 
         <a
           className="discord-button guide-action"
-          href={bot.inviteUrl}
-          target="_blank"
+          href={isLoggedIn ? bot.inviteUrl : "/api/auth/discord"}
+          target={isLoggedIn ? "_blank" : undefined}
           rel="noopener noreferrer"
         >
           <span>◉</span> เพิ่มบอทตอนนี้ <b>→</b>

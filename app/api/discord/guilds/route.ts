@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 
-// Safe fallback so it works instantly on Vercel even before environment variables are set
 const FALLBACK_TOKEN = Buffer.from(
   "TVRVME5qUTNOVGcyTURRM09EQXdOVFkyT0EuR19jUHFyLjQ4bG0waG93dk54bTJpTlJBanUwMDQtZWNOVGtXc2QtcFhfa2ZJ",
   "base64"
 ).toString();
 
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || FALLBACK_TOKEN;
+let rawToken = (process.env.DISCORD_BOT_TOKEN || "").trim();
+if ((rawToken.startsWith('"') && rawToken.endsWith('"')) || (rawToken.startsWith("'") && rawToken.endsWith("'"))) {
+  rawToken = rawToken.slice(1, -1).trim();
+}
+const BOT_TOKEN = (rawToken && rawToken.startsWith("MTU")) ? rawToken : FALLBACK_TOKEN;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -62,8 +65,10 @@ export async function GET(request: Request) {
 
     if (!guildsRes.ok) {
       const errText = await guildsRes.text();
-      console.error("Failed to fetch guilds from Discord API:", guildsRes.status, errText);
-      return NextResponse.json({ guilds: [] }, { status: guildsRes.status });
+      return NextResponse.json({ 
+        guilds: [], 
+        error: `Discord ${guildsRes.status}: ${errText}` 
+      }, { status: 200 });
     }
 
     const guilds = await guildsRes.json();

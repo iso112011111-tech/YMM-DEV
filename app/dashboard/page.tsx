@@ -19,6 +19,7 @@ interface DashboardConfig {
   theme_color: string;
   system_type: "both" | "emoji" | "form";
   log_channel_id: string;
+  panel_channel_id?: string;
   welcome_enabled: boolean;
   welcome_title: string;
   welcome_message: string;
@@ -27,35 +28,6 @@ interface DashboardConfig {
   form_questions: string[];
   reaction_roles: RoleMapping[];
 }
-
-const DEFAULT_CONFIG: DashboardConfig = {
-  guild_id: "default_server",
-  server_name: "Galaxy Community",
-  theme_color: "#8B5CF6",
-  system_type: "both",
-  log_channel_id: "123456789012345678",
-  welcome_enabled: true,
-  welcome_title: "🎉 ยินดีต้อนรับสู่ {server}!",
-  welcome_message: "สวัสดี {user}\n\nคุณได้รับยศ 👑 {role} เรียบร้อยแล้ว\nขอให้สนุกกับการใช้งาน Server ของเรานะครับ 💜",
-  form_title: "แบบฟอร์มกรอกข้อมูลเพื่อรับยศ",
-  form_role_id: "987654321098765432",
-  form_questions: ["ชื่อ-นามสกุล หรือ ชื่อเล่น", "อายุ", "เหตุผลที่เข้าร่วมเซิร์ฟเวอร์"],
-  reaction_roles: [
-    { emoji: "👑", roleId: "111222333444", roleName: "VIP Member" },
-    { emoji: "🎮", roleId: "222333444555", roleName: "Gamer" },
-    { emoji: "🎵", roleId: "333444555666", roleName: "Music Lover" },
-    { emoji: "💜", roleId: "444555666777", roleName: "Supporter" }
-  ]
-};
-
-const PRESET_COLORS = [
-  { name: "Neon Purple", hex: "#8B5CF6" },
-  { name: "Neon Blue", hex: "#3B82F6" },
-  { name: "Cyber Cyan", hex: "#06B6D4" },
-  { name: "Emerald Green", hex: "#10B981" },
-  { name: "Neon Pink", hex: "#EC4899" },
-  { name: "Amber Gold", hex: "#F59E0B" }
-];
 
 interface DiscordGuild {
   id: string;
@@ -72,41 +44,119 @@ interface DiscordProfile {
   guilds?: DiscordGuild[];
 }
 
+interface DiscordChannel {
+  id: string;
+  name: string;
+  type: number;
+}
+
+interface DiscordRole {
+  id: string;
+  name: string;
+  color: string;
+}
+
+const DEFAULT_CONFIG: DashboardConfig = {
+  guild_id: "1543099793226600528",
+  server_name: "YMM DEV",
+  theme_color: "#8B5CF6",
+  system_type: "both",
+  log_channel_id: "1546477565785546813",
+  panel_channel_id: "1546477485904892004",
+  welcome_enabled: true,
+  welcome_title: "🎉 ยินดีต้อนรับสู่ {server}!",
+  welcome_message: "สวัสดี {user}\n\nคุณได้รับยศ 👑 {role} เรียบร้อยแล้ว\nขอให้สนุกกับการใช้งาน Server ของเรานะครับ 💜",
+  form_title: "แบบฟอร์มกรอกข้อมูลเพื่อรับยศ",
+  form_role_id: "1546299207269224521",
+  form_questions: ["ชื่อ-นามสกุล หรือ ชื่อเล่น", "อายุ", "เหตุผลที่เข้าร่วมเซิร์ฟเวอร์"],
+  reaction_roles: [
+    { emoji: "👑", roleId: "1546299207269224521", roleName: "MEMBERS" },
+    { emoji: "⭐", roleId: "1546299334537256960", roleName: "ลูกค้า" }
+  ]
+};
+
+const PRESET_COLORS = [
+  { name: "Neon Purple", hex: "#8B5CF6" },
+  { name: "Neon Blue", hex: "#3B82F6" },
+  { name: "Cyber Cyan", hex: "#06B6D4" },
+  { name: "Emerald Green", hex: "#10B981" },
+  { name: "Neon Pink", hex: "#EC4899" },
+  { name: "Amber Gold", hex: "#F59E0B" }
+];
+
 export default function DashboardPage() {
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState<"appearance" | "system" | "welcome" | "form" | "roles">("appearance");
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
-  const [newEmoji, setNewEmoji] = useState("⭐");
-  const [newRoleName, setNewRoleName] = useState("");
-  const [newRoleId, setNewRoleId] = useState("");
+  const [newEmoji, setNewEmoji] = useState("👑");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [customRoleName, setCustomRoleName] = useState("");
+  const [customRoleId, setCustomRoleId] = useState("");
   const [previewTab, setPreviewTab] = useState<"emoji_panel" | "form_panel" | "welcome_dm">("emoji_panel");
 
-  // Discord Profile & Guilds State
+  // Discord Profile & Live Bot Data
   const [profile, setProfile] = useState<DiscordProfile | null>(null);
+  const [botGuilds, setBotGuilds] = useState<DiscordGuild[]>([]);
+  const [channels, setChannels] = useState<DiscordChannel[]>([]);
+  const [roles, setRoles] = useState<DiscordRole[]>([]);
   const [isCustomServer, setIsCustomServer] = useState(false);
 
-  // Fetch logged in Discord profile and guilds
+  // 1. Fetch User Profile
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data: { profile: DiscordProfile | null }) => {
         setProfile(data.profile);
-        if (data.profile?.guilds && data.profile.guilds.length > 0) {
-          const firstGuild = data.profile.guilds[0];
-          setConfig((prev) => ({
-            ...prev,
-            guild_id: prev.guild_id === "default_server" ? firstGuild.id : prev.guild_id,
-            server_name: prev.guild_id === "default_server" ? firstGuild.name : prev.server_name
-          }));
-        }
       })
       .catch(() => setProfile(null));
   }, []);
 
-  // Load config from Firestore on mount & set up real-time listener
+  // 2. Fetch Guilds that the Bot is currently in
   useEffect(() => {
-    if (!config.guild_id) return;
+    fetch("/api/discord/guilds")
+      .then((res) => res.json())
+      .then((data: { guilds?: DiscordGuild[] }) => {
+        if (data.guilds && data.guilds.length > 0) {
+          setBotGuilds(data.guilds);
+          // If current guild is default_server, auto switch to the real bot guild
+          setConfig((prev) => {
+            if (prev.guild_id === "default_server" || !prev.guild_id) {
+              const firstGuild = data.guilds![0];
+              return {
+                ...prev,
+                guild_id: firstGuild.id,
+                server_name: firstGuild.name
+              };
+            }
+            return prev;
+          });
+        }
+      })
+      .catch((err) => console.warn("Could not load bot guilds:", err));
+  }, []);
+
+  // 3. Fetch Channels & Roles whenever selected guild_id changes
+  useEffect(() => {
+    if (!config.guild_id || config.guild_id === "default_server") return;
+
+    fetch(`/api/discord/guilds?guildId=${config.guild_id}`)
+      .then((res) => res.json())
+      .then((data: { channels?: DiscordChannel[]; roles?: DiscordRole[] }) => {
+        if (data.channels) setChannels(data.channels);
+        if (data.roles) {
+          setRoles(data.roles);
+          if (data.roles.length > 0 && !selectedRoleId) {
+            setSelectedRoleId(data.roles[0].id);
+          }
+        }
+      })
+      .catch((err) => console.warn("Could not load channels/roles:", err));
+  }, [config.guild_id, selectedRoleId]);
+
+  // 4. Real-time Firebase Firestore Sync for current guild
+  useEffect(() => {
+    if (!config.guild_id || config.guild_id === "default_server") return;
     const docRef = doc(db, "guilds", config.guild_id);
 
     // Initial fetch
@@ -150,18 +200,34 @@ export default function DashboardPage() {
     }
   };
 
-  // Role Mapping Handlers
+  // Add Role Mapping (Dropdown role or Custom role)
   const addRoleMapping = () => {
-    if (!newRoleName.trim() || !newRoleId.trim()) return;
+    let roleNameToAdd = "";
+    let roleIdToAdd = "";
+
+    if (selectedRoleId && selectedRoleId !== "custom") {
+      const found = roles.find((r) => r.id === selectedRoleId);
+      if (found) {
+        roleNameToAdd = found.name;
+        roleIdToAdd = found.id;
+      }
+    } else {
+      roleNameToAdd = customRoleName.trim();
+      roleIdToAdd = customRoleId.trim();
+    }
+
+    if (!roleNameToAdd || !roleIdToAdd) return;
+
     setConfig((prev) => ({
       ...prev,
       reaction_roles: [
         ...prev.reaction_roles,
-        { emoji: newEmoji, roleName: newRoleName.trim(), roleId: newRoleId.trim() }
+        { emoji: newEmoji, roleName: roleNameToAdd, roleId: roleIdToAdd }
       ]
     }));
-    setNewRoleName("");
-    setNewRoleId("");
+
+    setCustomRoleName("");
+    setCustomRoleId("");
   };
 
   const removeRoleMapping = (index: number) => {
@@ -221,12 +287,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Actions: Server Selector & Discord Profile & Save */}
+          {/* Right Actions: Real Server Selector & Profile & Save Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            {/* Server Selector Dropdown */}
-            {profile?.guilds && profile.guilds.length > 0 && !isCustomServer ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.3)" }}>
-                <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>🏰 เลือกเซิร์ฟเวอร์:</span>
+            {/* Live Server Selector Dropdown */}
+            {botGuilds.length > 0 && !isCustomServer ? (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(13, 26, 45, 0.85)",
+                padding: "6px 14px",
+                borderRadius: "10px",
+                border: "1px solid rgba(139, 92, 246, 0.4)",
+                boxShadow: "0 0 10px rgba(139, 92, 246, 0.15)"
+              }}>
+                <span style={{ fontSize: "0.8rem", color: "#c4b5fd", fontWeight: 600 }}>🏰 เซิร์ฟเวอร์:</span>
                 <select
                   value={config.guild_id}
                   onChange={(e) => {
@@ -234,11 +309,11 @@ export default function DashboardPage() {
                     if (selectedVal === "custom") {
                       setIsCustomServer(true);
                     } else {
-                      const selectedGuild = profile.guilds?.find((g) => g.id === selectedVal);
+                      const selected = botGuilds.find((g) => g.id === selectedVal);
                       setConfig((prev) => ({
                         ...prev,
                         guild_id: selectedVal,
-                        server_name: selectedGuild ? selectedGuild.name : prev.server_name
+                        server_name: selected ? selected.name : prev.server_name
                       }));
                     }
                   }}
@@ -246,19 +321,19 @@ export default function DashboardPage() {
                     background: "transparent",
                     border: "none",
                     color: "#fff",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
                     outline: "none",
                     cursor: "pointer"
                   }}
                 >
-                  {profile.guilds.map((g) => (
+                  {botGuilds.map((g) => (
                     <option key={g.id} value={g.id} style={{ background: "#0d1a2d", color: "#fff" }}>
-                      {g.name}
+                      🟢 {g.name}
                     </option>
                   ))}
                   <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
-                    ✏️ ระบุ Server ID เอง...
+                    ✏️ ระบุ Server ID อื่นเอง...
                   </option>
                 </select>
               </div>
@@ -275,12 +350,12 @@ export default function DashboardPage() {
                     color: "#fff",
                     fontSize: "0.85rem",
                     fontWeight: 600,
-                    width: "140px",
+                    width: "150px",
                     outline: "none"
                   }}
                   placeholder="ID เซิร์ฟเวอร์..."
                 />
-                {profile?.guilds && profile.guilds.length > 0 && (
+                {botGuilds.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setIsCustomServer(false)}
@@ -299,7 +374,7 @@ export default function DashboardPage() {
                 alignItems: "center",
                 gap: "8px",
                 background: "rgba(13, 26, 45, 0.8)",
-                padding: "4px 10px",
+                padding: "4px 12px",
                 borderRadius: "20px",
                 border: "1px solid rgba(72, 139, 222, 0.2)"
               }}>
@@ -310,8 +385,8 @@ export default function DashboardPage() {
                       : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
                   }
                   alt=""
-                  width={26}
-                  height={26}
+                  width={24}
+                  height={24}
                   style={{ borderRadius: "50%" }}
                   unoptimized
                 />
@@ -429,7 +504,7 @@ export default function DashboardPage() {
           }}>
             {[
               { id: "appearance", label: "🎨 ธีมและสี", desc: "Theme & Color" },
-              { id: "system", label: "⚡ ระบบรับยศ", desc: "System Mode" },
+              { id: "system", label: "⚡ ระบบรับยศและห้อง", desc: "Channels & System" },
               { id: "welcome", label: "💌 ข้อความต้อนรับ", desc: "Welcome DM" },
               { id: "form", label: "📋 แบบฟอร์ม", desc: "Form Setup" },
               { id: "roles", label: "👑 ผูก Emoji / Role", desc: "Role Mapping" },
@@ -492,7 +567,7 @@ export default function DashboardPage() {
                     fontSize: "0.95rem",
                     outline: "none"
                   }}
-                  placeholder="เช่น Galaxy Community..."
+                  placeholder="เช่น YMM DEV..."
                 />
               </div>
 
@@ -571,7 +646,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Tab 2: System Mode & Log Channel */}
+          {/* Tab 2: System Mode & Real Channels Selection */}
           {activeTab === "system" && (
             <div style={{
               background: "rgba(13, 26, 45, 0.75)",
@@ -580,14 +655,15 @@ export default function DashboardPage() {
               padding: "24px",
               border: "1px solid rgba(72, 139, 222, 0.25)"
             }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>⚡ รูปแบบระบบรับยศและ Log</h2>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>⚡ รูปแบบระบบและเลือกห้องสำหรับบอท</h2>
               <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                เลือกระบบที่ต้องการเปิดใช้งานในเซิร์ฟเวอร์นี้
+                เลือกระบบรับยศ และระบุห้องที่ต้องการให้บอทส่งข้อความ/บันทึก Log ในเซิร์ฟเวอร์
               </p>
 
+              {/* Mode Select */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
                 {[
-                  { type: "both", title: "เปิดทั้งสองระบบ", icon: "✨", desc: "รองรับทั้ง Emoji & Form" },
+                  { type: "both", title: "เปิดทั้งสองระบบ", icon: "✨", desc: "Emoji & Form พร้อมกัน" },
                   { type: "emoji", title: "กด Emoji เท่านั้น", icon: "🏆", desc: "คลิก Emoji ได้รับยศทันที" },
                   { type: "form", title: "กรอกฟอร์มเท่านั้น", icon: "📋", desc: "กรอกข้อมูลยืนยันตัวตน" }
                 ].map((mode) => (
@@ -612,28 +688,102 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Log Channel ID */}
+              {/* Channel Selector for Role Panel */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
+                  📍 ห้องสำหรับส่งแผงรับยศ (Role Panel Channel)
+                </label>
+                {channels.length > 0 ? (
+                  <select
+                    value={config.panel_channel_id || ""}
+                    onChange={(e) => setConfig({ ...config, panel_channel_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "rgba(7, 17, 31, 0.8)",
+                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.95rem",
+                      outline: "none"
+                    }}
+                  >
+                    <option value="" style={{ background: "#0d1a2d" }}>-- เลือกห้องข้อความในเซิร์ฟเวอร์ --</option>
+                    {channels.map((ch) => (
+                      <option key={ch.id} value={ch.id} style={{ background: "#0d1a2d" }}>
+                        #{ch.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={config.panel_channel_id || ""}
+                    onChange={(e) => setConfig({ ...config, panel_channel_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "rgba(7, 17, 31, 0.8)",
+                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.95rem",
+                      outline: "none"
+                    }}
+                    placeholder="ระบุ Channel ID เช่น 1546477485904892004"
+                  />
+                )}
+                <span style={{ fontSize: "0.75rem", color: "#8ea4c3", display: "block", marginTop: "4px" }}>
+                  * ห้องที่บอทจะส่ง Embed แผงรับยศให้สมาชิกมากดรับ
+                </span>
+              </div>
+
+              {/* Log Channel Selector */}
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  📢 Channel ID สำหรับ Real-time Admin Log
+                  📢 ห้องสำหรับแจ้งเตือน Admin Log (Log Channel)
                 </label>
-                <input
-                  type="text"
-                  value={config.log_channel_id}
-                  onChange={(e) => setConfig({ ...config, log_channel_id: e.target.value })}
-                  style={{
-                    width: "100%",
-                    background: "rgba(7, 17, 31, 0.8)",
-                    border: "1px solid rgba(72, 139, 222, 0.3)",
-                    color: "#fff",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    fontSize: "0.95rem",
-                    outline: "none"
-                  }}
-                  placeholder="เช่น 123456789012345678"
-                />
-                <span style={{ fontSize: "0.75rem", color: "#8ea4c3", display: "block", marginTop: "6px" }}>
+                {channels.length > 0 ? (
+                  <select
+                    value={config.log_channel_id}
+                    onChange={(e) => setConfig({ ...config, log_channel_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "rgba(7, 17, 31, 0.8)",
+                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.95rem",
+                      outline: "none"
+                    }}
+                  >
+                    <option value="" style={{ background: "#0d1a2d" }}>-- เลือกห้องแจ้งเตือน Log --</option>
+                    {channels.map((ch) => (
+                      <option key={ch.id} value={ch.id} style={{ background: "#0d1a2d" }}>
+                        #{ch.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={config.log_channel_id}
+                    onChange={(e) => setConfig({ ...config, log_channel_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "rgba(7, 17, 31, 0.8)",
+                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.95rem",
+                      outline: "none"
+                    }}
+                    placeholder="ระบุ Channel ID สำหรับ Log เช่น 1546477565785546813"
+                  />
+                )}
+                <span style={{ fontSize: "0.75rem", color: "#8ea4c3", display: "block", marginTop: "4px" }}>
                   * บอทจะส่ง Embed แจ้งเตือนแอดมินทุกครั้งที่มีสมาชิกได้รับยศเข้ามาที่ห้องนี้
                 </span>
               </div>
@@ -730,7 +880,7 @@ export default function DashboardPage() {
             }}>
               <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>📋 ตั้งค่าแบบฟอร์มยืนยันตัวตน</h2>
               <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                กำหนดหัวข้อฟอร์มและ Role ที่จะแจกเมื่อสมาชิกส่งข้อมูลสำเร็จ
+                กำหนดหัวข้อฟอร์มและเลือก Role ที่จะแจกเมื่อสมาชิกส่งข้อมูลสำเร็จ
               </p>
 
               <div style={{ marginBottom: "16px" }}>
@@ -754,26 +904,50 @@ export default function DashboardPage() {
                 />
               </div>
 
+              {/* Form Target Role Dropdown */}
               <div style={{ marginBottom: "20px" }}>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#c4b5fd", marginBottom: "8px" }}>
-                  🎯 Role ID ที่จะมอบให้ (Target Role ID)
+                  🎯 Role ที่จะมอบให้เมื่อส่งฟอร์มสำเร็จ (Target Role)
                 </label>
-                <input
-                  type="text"
-                  value={config.form_role_id}
-                  onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
-                  style={{
-                    width: "100%",
-                    background: "rgba(7, 17, 31, 0.8)",
-                    border: "1px solid rgba(72, 139, 222, 0.3)",
-                    color: "#fff",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    fontSize: "0.95rem",
-                    outline: "none"
-                  }}
-                  placeholder="เช่น 987654321098765432"
-                />
+                {roles.length > 0 ? (
+                  <select
+                    value={config.form_role_id}
+                    onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "rgba(7, 17, 31, 0.8)",
+                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.95rem",
+                      outline: "none"
+                    }}
+                  >
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.id} style={{ background: "#0d1a2d" }}>
+                        @{r.name} ({r.id})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={config.form_role_id}
+                    onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
+                    style={{
+                      width: "100%",
+                      background: "rgba(7, 17, 31, 0.8)",
+                      border: "1px solid rgba(72, 139, 222, 0.3)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.95rem",
+                      outline: "none"
+                    }}
+                    placeholder="เช่น 1546299207269224521"
+                  />
+                )}
               </div>
 
               {/* Form Questions */}
@@ -856,7 +1030,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Tab 5: Role & Emoji Mappings */}
+          {/* Tab 5: Role & Emoji Mappings with Role Dropdown */}
           {activeTab === "roles" && (
             <div style={{
               background: "rgba(13, 26, 45, 0.75)",
@@ -867,7 +1041,7 @@ export default function DashboardPage() {
             }}>
               <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>👑 ผูก Emoji กับ Role</h2>
               <p style={{ color: "#8ea4c3", fontSize: "0.85rem", marginBottom: "20px" }}>
-                กำหนดว่าเมื่อสมาชิกกด Emoji แต่ละตัว จะได้รับยศอะไร
+                กำหนดว่าเมื่อสมาชิกกด Emoji แต่ละตัว จะได้รับยศอะไร โดยเลือก Role จากเซิร์ฟเวอร์ได้ทันที
               </p>
 
               {/* Add New Mapping Form */}
@@ -879,7 +1053,7 @@ export default function DashboardPage() {
                 marginBottom: "20px"
               }}>
                 <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#c4b5fd", marginBottom: "12px" }}>➕ เพิ่มการผูก Role ใหม่</div>
-                <div style={{ display: "grid", gridTemplateColumns: "80px 1.2fr 1.2fr auto", gap: "10px", alignItems: "center" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "80px 1fr auto", gap: "10px", alignItems: "center" }}>
                   <input
                     type="text"
                     value={newEmoji}
@@ -896,36 +1070,67 @@ export default function DashboardPage() {
                       outline: "none"
                     }}
                   />
-                  <input
-                    type="text"
-                    value={newRoleName}
-                    onChange={(e) => setNewRoleName(e.target.value)}
-                    placeholder="ชื่อ Role (เช่น VIP)"
-                    style={{
-                      background: "rgba(13, 26, 45, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      fontSize: "0.85rem",
-                      outline: "none"
-                    }}
-                  />
-                  <input
-                    type="text"
-                    value={newRoleId}
-                    onChange={(e) => setNewRoleId(e.target.value)}
-                    placeholder="Role ID ใน Discord"
-                    style={{
-                      background: "rgba(13, 26, 45, 0.8)",
-                      border: "1px solid rgba(72, 139, 222, 0.3)",
-                      color: "#fff",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      fontSize: "0.85rem",
-                      outline: "none"
-                    }}
-                  />
+
+                  {roles.length > 0 && selectedRoleId !== "custom" ? (
+                    <select
+                      value={selectedRoleId}
+                      onChange={(e) => setSelectedRoleId(e.target.value)}
+                      style={{
+                        background: "rgba(13, 26, 45, 0.8)",
+                        border: "1px solid rgba(72, 139, 222, 0.3)",
+                        color: "#fff",
+                        padding: "10px 12px",
+                        borderRadius: "8px",
+                        fontSize: "0.9rem",
+                        outline: "none"
+                      }}
+                    >
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id} style={{ background: "#0d1a2d" }}>
+                          @{r.name}
+                        </option>
+                      ))}
+                      <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
+                        ✏️ พิมพ์ Role ID เอง...
+                      </option>
+                    </select>
+                  ) : (
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input
+                        type="text"
+                        value={customRoleName}
+                        onChange={(e) => setCustomRoleName(e.target.value)}
+                        placeholder="ชื่อ Role"
+                        style={{
+                          flex: 1,
+                          background: "rgba(13, 26, 45, 0.8)",
+                          border: "1px solid rgba(72, 139, 222, 0.3)",
+                          color: "#fff",
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          fontSize: "0.85rem",
+                          outline: "none"
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={customRoleId}
+                        onChange={(e) => setCustomRoleId(e.target.value)}
+                        placeholder="Role ID"
+                        style={{
+                          flex: 1,
+                          background: "rgba(13, 26, 45, 0.8)",
+                          border: "1px solid rgba(72, 139, 222, 0.3)",
+                          color: "#fff",
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          fontSize: "0.85rem",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={addRoleMapping}
@@ -933,7 +1138,7 @@ export default function DashboardPage() {
                       background: `linear-gradient(135deg, ${config.theme_color}, #3B82F6)`,
                       color: "#fff",
                       border: "none",
-                      padding: "8px 16px",
+                      padding: "10px 18px",
                       borderRadius: "8px",
                       fontWeight: 700,
                       cursor: "pointer",
@@ -1064,7 +1269,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>RoleBot</span>
+                    <span style={{ fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>YMM_ROLE</span>
                     <span style={{
                       background: "#5865F2",
                       color: "#fff",
@@ -1076,7 +1281,7 @@ export default function DashboardPage() {
                       BOT
                     </span>
                   </div>
-                  <span style={{ fontSize: "0.7rem", color: "#949BA4" }}>วันนี้เวลา 12:46</span>
+                  <span style={{ fontSize: "0.7rem", color: "#949BA4" }}>วันนี้เวลา 20:25</span>
                 </div>
               </div>
 
@@ -1151,7 +1356,7 @@ export default function DashboardPage() {
                     <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
                       {config.welcome_message
                         .replace("{user}", "@สมาชิก")
-                        .replace("{role}", "VIP Member")
+                        .replace("{role}", config.reaction_roles[0]?.roleName || "MEMBERS")
                         .replace("{server}", config.server_name)}
                     </div>
                   </>

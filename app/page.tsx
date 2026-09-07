@@ -7,18 +7,29 @@ import Features from "@/components/Features";
 import FeaturedBot from "@/components/FeaturedBot";
 import Footer from "@/components/Footer";
 import GuideModal from "@/components/GuideModal";
+import { FEATURED_BOT, type BotConfig } from "@/data/siteData";
 
 export default function Home() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [selectedBot, setSelectedBot] = useState<BotConfig>(FEATURED_BOT);
+
+  const openGuide = (bot: BotConfig) => {
+    setSelectedBot(bot);
+    setIsGuideOpen(true);
+  };
 
   return (
     <main>
       <Navbar onOpenGuide={() => setIsGuideOpen(true)} />
       <Hero onOpenGuide={() => setIsGuideOpen(true)} />
       <Features />
-      <FeaturedBot onOpenGuide={() => setIsGuideOpen(true)} />
+      <FeaturedBot onOpenGuide={openGuide} />
       <Footer onOpenGuide={() => setIsGuideOpen(true)} />
-      <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+      <GuideModal
+        bot={selectedBot}
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+      />
     </main>
   );
 }

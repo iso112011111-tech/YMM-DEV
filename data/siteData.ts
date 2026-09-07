@@ -11,6 +11,21 @@ export interface GuideStep {
   codeSnippet?: string;
 }
 
+export interface BotConfig {
+  name: string;
+  type: string;
+  headline: string;
+  description: string;
+  tags: readonly string[];
+  features: readonly string[];
+  stats: {
+    users: string;
+    servers: string;
+  };
+  inviteUrl: string;
+  guideSteps: readonly GuideStep[];
+}
+
 export const SITE_CONFIG = {
   name: "YMM-DEV",
   tagline: "Discord Bot Marketplace",
@@ -21,6 +36,8 @@ export const SITE_CONFIG = {
     discordSupport: "https://discord.gg/D68qNtzX3x",
     botInvite:
       "https://discord.com/oauth2/authorize?client_id=1546202260558848010&permissions=8&integration_type=0&scope=bot",
+    welcomeBotInvite:
+      "https://discord.com/oauth2/authorize?client_id=1546427258711838741&permissions=8&integration_type=0&scope=bot",
   },
 } as const;
 
@@ -47,7 +64,7 @@ export const FEATURES: readonly FeatureItem[] = [
   },
 ];
 
-export const FEATURED_BOT = {
+export const FEATURED_BOT: BotConfig = {
   name: "YMM-MUSIC",
   type: "BOT",
   headline: "บอทฟังเพลงครบจบในตัวเดียว",
@@ -64,28 +81,79 @@ export const FEATURED_BOT = {
     users: "12,458+",
     servers: "8,721+",
   },
-} as const;
+  inviteUrl: SITE_CONFIG.links.botInvite,
+  guideSteps: [
+    {
+      step: 1,
+      title: "เชิญ YMM-MUSIC เข้าเซิร์ฟเวอร์",
+      detail: "กดปุ่มเพิ่มบอท เลือกเซิร์ฟเวอร์ และกด Authorize ในหน้า Discord",
+    },
+    {
+      step: 2,
+      title: "เริ่มใช้คำสั่งเพลง",
+      detail: "พิมพ์คำสั่งในห้องแชตเพื่อเริ่มเล่นเพลง",
+      codeSnippet: "/play",
+    },
+  ],
+};
 
-export const GUIDE_STEPS: readonly GuideStep[] = [
-  {
-    step: 1,
-    title: "กด “เพิ่มบอทในเซิร์ฟเวอร์”",
-    detail: "ระบบจะพาไปยังหน้า Discord Authorization เพื่อยืนยันสิทธิ์",
+export const WELCOME_BOT: BotConfig = {
+  name: "BOT-WELCOME",
+  type: "BOT",
+  headline: "บอทแสดงคนเข้าคนออก",
+  description:
+    "ต้อนรับสมาชิกใหม่และแจ้งเตือนสมาชิกที่ออกจากเซิร์ฟเวอร์ด้วยข้อความที่ตั้งค่าได้",
+  tags: ["Welcome", "Leave Log", "Slash Command"],
+  features: [
+    "ตั้งค่าช่องต้อนรับและช่องแจ้งเตือนคนออกได้แยกกัน",
+    "กำหนดข้อความต้อนรับและข้อความแจ้งออกได้ตามต้องการ",
+    "ทดสอบการ์ดต้อนรับหรือคนออกก่อนใช้งานจริง",
+    "ตรวจสอบการตั้งค่าทั้งหมดได้ด้วยคำสั่งเดียว",
+  ],
+  stats: {
+    users: "พร้อมใช้งาน",
+    servers: "เพิ่มได้ทันที",
   },
-  {
-    step: 2,
-    title: "เลือกเซิร์ฟเวอร์ที่ต้องการ",
-    detail: "คุณต้องมีสิทธิ์ Manage Server หรือเป็นเจ้าของเซิร์ฟเวอร์นั้น",
-  },
-  {
-    step: 3,
-    title: "ตรวจสอบสิทธิ์แล้วกด Authorize",
-    detail: "อนุญาตสิทธิ์ที่จำเป็นเพื่อให้บอทสามารถเข้าร่วมและเล่นเสียงได้",
-  },
-  {
-    step: 4,
-    title: "เริ่มใช้คำสั่งได้ทันที",
-    detail: "พิมพ์คำสั่งในห้องแชตเพื่อเริ่มเล่นเพลงและสัมผัสประสบการณ์ทันที",
-    codeSnippet: "/play",
-  },
-];
+  inviteUrl: SITE_CONFIG.links.welcomeBotInvite,
+  guideSteps: [
+    {
+      step: 1,
+      title: "ตั้งค่าช่องต้อนรับสมาชิกใหม่",
+      detail: "เลือกห้องที่ต้องการให้บอทส่งการ์ดต้อนรับ",
+      codeSnippet: "/welcome set welcome-channel #channel",
+    },
+    {
+      step: 2,
+      title: "ตั้งค่าช่องแจ้งเตือนคนออก",
+      detail: "เลือกห้องสำหรับแจ้งเตือนเมื่อสมาชิกออกจากเซิร์ฟเวอร์",
+      codeSnippet: "/welcome set leave-channel #channel",
+    },
+    {
+      step: 3,
+      title: "ตั้งข้อความต้อนรับ",
+      detail: "กำหนดข้อความที่จะส่งเมื่อมีสมาชิกใหม่เข้ามา",
+      codeSnippet: "/welcome set welcome-message <ข้อความ>",
+    },
+    {
+      step: 4,
+      title: "ตั้งข้อความแจ้งออก",
+      detail: "กำหนดข้อความที่จะส่งเมื่อสมาชิกออกจากเซิร์ฟเวอร์",
+      codeSnippet: "/welcome set leave-message <ข้อความ>",
+    },
+    {
+      step: 5,
+      title: "ตรวจสอบการตั้งค่าทั้งหมด",
+      detail: "ดูช่องและข้อความที่ตั้งค่าไว้ในปัจจุบัน",
+      codeSnippet: "/welcome config",
+    },
+    {
+      step: 6,
+      title: "ทดสอบการ์ดก่อนเปิดใช้งาน",
+      detail: "ทดสอบการ์ดต้อนรับหรือการ์ดแจ้งออกได้ทันที",
+      codeSnippet: "/welcome test welcome | leave",
+    },
+  ],
+};
+
+export const BOT_CATALOG: readonly BotConfig[] = [FEATURED_BOT, WELCOME_BOT];
+

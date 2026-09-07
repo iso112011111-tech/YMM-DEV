@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { GUIDE_STEPS, SITE_CONFIG } from "@/data/siteData";
+import { type BotConfig } from "@/data/siteData";
 
 interface GuideModalProps {
+  bot: BotConfig;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
+export default function GuideModal({ bot, isOpen, onClose }: GuideModalProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -56,13 +57,13 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
           ×
         </button>
         <p className="guide-kicker">YMM-DEV / QUICK START</p>
-        <h2 id="guide-title">วิธีการใช้งานบอท</h2>
+        <h2 id="guide-title">วิธีการใช้งาน {bot.name}</h2>
         <p className="guide-intro">
-          เพิ่ม YMM-MUSIC เข้าเซิร์ฟเวอร์ของคุณได้ง่ายๆ ในไม่กี่ขั้นตอน
+          เพิ่ม {bot.name} เข้าเซิร์ฟเวอร์ของคุณ แล้วเริ่มใช้งานได้ในไม่กี่ขั้นตอน
         </p>
 
         <ol className="guide-steps">
-          {GUIDE_STEPS.map((step) => (
+          {bot.guideSteps.map((step) => (
             <li key={step.step}>
               <span>{step.step}</span>
               <div>
@@ -83,7 +84,7 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
 
         <a
           className="discord-button guide-action"
-          href={SITE_CONFIG.links.botInvite}
+          href={bot.inviteUrl}
           target="_blank"
           rel="noopener noreferrer"
         >

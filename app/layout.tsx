@@ -39,6 +39,8 @@ export const metadata: Metadata = {
     "บอทดิสคอร์ด",
     "Discord Bot Marketplace",
     "Music Bot",
+    "BOT-WELCOME",
+    "Welcome Bot",
   ],
   authors: [{ name: "YMM-DEV" }],
   creator: "YMM-DEV",

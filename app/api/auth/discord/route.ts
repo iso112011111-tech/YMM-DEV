@@ -10,16 +10,26 @@ export async function GET(request: Request) {
     process.env.DISCORD_REDIRECT_URI ||
     new URL("/api/auth/discord/callback", request.url).toString();
 
+  const requestUrl = new URL(request.url);
+  const redirectTo = requestUrl.searchParams.get("redirect") || "/";
+
   const state = randomBytes(24).toString("hex");
   const authorizationUrl = new URL("https://discord.com/oauth2/authorize");
   authorizationUrl.searchParams.set("client_id", clientId);
   authorizationUrl.searchParams.set("response_type", "code");
   authorizationUrl.searchParams.set("redirect_uri", redirectUri);
-  authorizationUrl.searchParams.set("scope", "identify");
+  authorizationUrl.searchParams.set("scope", "identify guilds");
   authorizationUrl.searchParams.set("state", state);
 
   const response = NextResponse.redirect(authorizationUrl);
   response.cookies.set(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 10 * 60,
+  });
+  response.cookies.set("ymm_oauth_redirect", redirectTo, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

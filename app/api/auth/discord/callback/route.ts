@@ -71,15 +71,65 @@ export async function GET(request: Request) {
     global_name?: string | null;
     avatar?: string | null;
   };
+
+  // Fetch manageable guilds (Admin or Manage Server)
+  let guilds: { id: string; name: string; icon: string | null; owner?: boolean }[] = [];
+  try {
+    const guildsResponse = await fetch("https://discord.com/api/users/@me/guilds", {
+      headers: { Authorization: `Bearer ${token.access_token}` },
+    });
+
+    if (guildsResponse.ok) {
+      const allGuilds = (await guildsResponse.json()) as Array<{
+        id: string;
+        name: string;
+        icon: string | null;
+        owner: boolean;
+        permissions: string;
+      }>;
+
+      guilds = allGuilds
+        .filter((g) => {
+          if (g.owner) return true;
+          try {
+            const perm = BigInt(g.permissions);
+            // 0x8 = ADMINISTRATOR, 0x20 = MANAGE_GUILD
+            return (perm & BigInt(0x28)) !== BigInt(0);
+          } catch {
+            return false;
+          }
+        })
+        .slice(0, 15) // Keep cookie payload lightweight
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          icon: g.icon,
+          owner: g.owner,
+        }));
+    }
+  } catch (err) {
+    console.warn("Could not fetch user guilds:", err);
+  }
+
   const profile: DiscordProfile = {
     id: discordProfile.id,
     username: discordProfile.username,
     globalName: discordProfile.global_name ?? null,
     avatar: discordProfile.avatar ?? null,
+    guilds,
   };
 
-  const response = NextResponse.redirect(new URL("/", request.url));
+  const redirectCookie = request.headers
+    .get("cookie")
+    ?.split(";")
+    .map((c) => c.trim().split("="))
+    .find(([name]) => name === "ymm_oauth_redirect")?.[1];
+
+  const destination = redirectCookie && redirectCookie.startsWith("/") ? redirectCookie : "/";
+
+  const response = NextResponse.redirect(new URL(destination, request.url));
   response.cookies.set(SESSION_COOKIE, createSession(profile), sessionCookieOptions());
   response.cookies.set(OAUTH_STATE_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
+  response.cookies.set("ymm_oauth_redirect", "", { ...sessionCookieOptions(), maxAge: 0 });
   return response;
 }

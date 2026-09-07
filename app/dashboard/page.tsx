@@ -57,6 +57,21 @@ const PRESET_COLORS = [
   { name: "Amber Gold", hex: "#F59E0B" }
 ];
 
+interface DiscordGuild {
+  id: string;
+  name: string;
+  icon: string | null;
+  owner?: boolean;
+}
+
+interface DiscordProfile {
+  id: string;
+  username: string;
+  globalName: string | null;
+  avatar: string | null;
+  guilds?: DiscordGuild[];
+}
+
 export default function DashboardPage() {
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState<"appearance" | "system" | "welcome" | "form" | "roles">("appearance");
@@ -67,8 +82,31 @@ export default function DashboardPage() {
   const [newRoleId, setNewRoleId] = useState("");
   const [previewTab, setPreviewTab] = useState<"emoji_panel" | "form_panel" | "welcome_dm">("emoji_panel");
 
+  // Discord Profile & Guilds State
+  const [profile, setProfile] = useState<DiscordProfile | null>(null);
+  const [isCustomServer, setIsCustomServer] = useState(false);
+
+  // Fetch logged in Discord profile and guilds
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data: { profile: DiscordProfile | null }) => {
+        setProfile(data.profile);
+        if (data.profile?.guilds && data.profile.guilds.length > 0) {
+          const firstGuild = data.profile.guilds[0];
+          setConfig((prev) => ({
+            ...prev,
+            guild_id: prev.guild_id === "default_server" ? firstGuild.id : prev.guild_id,
+            server_name: prev.guild_id === "default_server" ? firstGuild.name : prev.server_name
+          }));
+        }
+      })
+      .catch(() => setProfile(null));
+  }, []);
+
   // Load config from Firestore on mount & set up real-time listener
   useEffect(() => {
+    if (!config.guild_id) return;
     const docRef = doc(db, "guilds", config.guild_id);
 
     // Initial fetch
@@ -183,27 +221,125 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Actions: Server Selector & Save */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.2)" }}>
-              <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>Server ID:</span>
-              <input
-                type="text"
-                value={config.guild_id}
-                onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#fff",
-                  fontSize: "0.85rem",
-                  fontWeight: 600,
-                  width: "140px",
-                  outline: "none"
-                }}
-                placeholder="ID เซิร์ฟเวอร์..."
-              />
-            </div>
+          {/* Right Actions: Server Selector & Discord Profile & Save */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            {/* Server Selector Dropdown */}
+            {profile?.guilds && profile.guilds.length > 0 && !isCustomServer ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.3)" }}>
+                <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>🏰 เลือกเซิร์ฟเวอร์:</span>
+                <select
+                  value={config.guild_id}
+                  onChange={(e) => {
+                    const selectedVal = e.target.value;
+                    if (selectedVal === "custom") {
+                      setIsCustomServer(true);
+                    } else {
+                      const selectedGuild = profile.guilds?.find((g) => g.id === selectedVal);
+                      setConfig((prev) => ({
+                        ...prev,
+                        guild_id: selectedVal,
+                        server_name: selectedGuild ? selectedGuild.name : prev.server_name
+                      }));
+                    }
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    outline: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  {profile.guilds.map((g) => (
+                    <option key={g.id} value={g.id} style={{ background: "#0d1a2d", color: "#fff" }}>
+                      {g.name}
+                    </option>
+                  ))}
+                  <option value="custom" style={{ background: "#0d1a2d", color: "#c4b5fd" }}>
+                    ✏️ ระบุ Server ID เอง...
+                  </option>
+                </select>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(13, 26, 45, 0.8)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(72, 139, 222, 0.2)" }}>
+                <span style={{ fontSize: "0.8rem", color: "#8ea4c3" }}>Server ID:</span>
+                <input
+                  type="text"
+                  value={config.guild_id}
+                  onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    width: "140px",
+                    outline: "none"
+                  }}
+                  placeholder="ID เซิร์ฟเวอร์..."
+                />
+                {profile?.guilds && profile.guilds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomServer(false)}
+                    style={{ background: "transparent", border: "none", color: "#8ea4c3", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    กลับไปเลือกรายการ
+                  </button>
+                )}
+              </div>
+            )}
 
+            {/* Discord User Profile Badge or Login Button */}
+            {profile ? (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(13, 26, 45, 0.8)",
+                padding: "4px 10px",
+                borderRadius: "20px",
+                border: "1px solid rgba(72, 139, 222, 0.2)"
+              }}>
+                <Image
+                  src={
+                    profile.avatar
+                      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                      : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+                  }
+                  alt=""
+                  width={26}
+                  height={26}
+                  style={{ borderRadius: "50%" }}
+                  unoptimized
+                />
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff" }}>
+                  {profile.globalName || profile.username}
+                </span>
+              </div>
+            ) : (
+              <a
+                href="/api/auth/discord?redirect=/dashboard"
+                style={{
+                  background: "#5865F2",
+                  color: "#fff",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}
+              >
+                <span>🎮</span> เข้าสู่ระบบ Discord
+              </a>
+            )}
+
+            {/* Save Button */}
             <button
               onClick={handleSave}
               disabled={saving}

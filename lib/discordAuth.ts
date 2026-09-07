@@ -3,11 +3,19 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export const SESSION_COOKIE = "ymm_discord_session";
 export const OAUTH_STATE_COOKIE = "ymm_discord_oauth_state";
 
+export interface DiscordGuild {
+  id: string;
+  name: string;
+  icon: string | null;
+  owner?: boolean;
+}
+
 export interface DiscordProfile {
   id: string;
   username: string;
   globalName: string | null;
   avatar: string | null;
+  guilds?: DiscordGuild[];
 }
 
 function getSessionSecret() {
@@ -67,6 +75,7 @@ export function readSession(value: string | undefined): DiscordProfile | null {
       username: session.username,
       globalName: session.globalName,
       avatar: session.avatar,
+      guilds: session.guilds ?? [],
     };
   } catch {
     return null;

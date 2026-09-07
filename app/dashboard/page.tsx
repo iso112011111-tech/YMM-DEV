@@ -84,6 +84,24 @@ const PRESET_COLORS = [
   { name: "Amber Gold", hex: "#F59E0B" }
 ];
 
+function sanitizeConfig(data: any): DashboardConfig {
+  return {
+    guild_id: data?.guild_id || DEFAULT_CONFIG.guild_id,
+    server_name: data?.server_name || DEFAULT_CONFIG.server_name,
+    theme_color: data?.theme_color || DEFAULT_CONFIG.theme_color,
+    system_type: data?.system_type || DEFAULT_CONFIG.system_type,
+    log_channel_id: data?.log_channel_id || DEFAULT_CONFIG.log_channel_id,
+    panel_channel_id: data?.panel_channel_id || DEFAULT_CONFIG.panel_channel_id,
+    welcome_enabled: typeof data?.welcome_enabled === "boolean" ? data.welcome_enabled : DEFAULT_CONFIG.welcome_enabled,
+    welcome_title: data?.welcome_title || DEFAULT_CONFIG.welcome_title,
+    welcome_message: data?.welcome_message || DEFAULT_CONFIG.welcome_message,
+    form_title: data?.form_title || DEFAULT_CONFIG.form_title,
+    form_role_id: data?.form_role_id || DEFAULT_CONFIG.form_role_id,
+    form_questions: Array.isArray(data?.form_questions) ? data.form_questions : [...DEFAULT_CONFIG.form_questions],
+    reaction_roles: Array.isArray(data?.reaction_roles) ? data.reaction_roles : [...DEFAULT_CONFIG.reaction_roles],
+  };
+}
+
 export default function DashboardPage() {
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState<"appearance" | "system" | "welcome" | "form" | "roles">("appearance");
@@ -106,7 +124,7 @@ export default function DashboardPage() {
 
   // Permission Checks
   const isLoggedIn = Boolean(profile);
-  const hasBotInCurrentServer = botGuilds.some((g) => g.id === config.guild_id);
+  const hasBotInCurrentServer = (botGuilds || []).some((g) => g.id === config.guild_id);
   const isAccessible = isLoggedIn && hasBotInCurrentServer;
 
   // 1. Fetch User Profile
@@ -171,7 +189,7 @@ export default function DashboardPage() {
     // Initial fetch
     getDoc(docRef).then((snapshot) => {
       if (snapshot.exists()) {
-        setConfig((prev) => ({ ...prev, ...(snapshot.data() as Partial<DashboardConfig>) }));
+        setConfig((prev) => sanitizeConfig({ ...prev, ...snapshot.data() }));
       }
     }).catch((err) => {
       console.warn("Firestore fetch notice:", err);
@@ -180,7 +198,7 @@ export default function DashboardPage() {
     // Real-time sync listener
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
-        setConfig((prev) => ({ ...prev, ...(snapshot.data() as Partial<DashboardConfig>) }));
+        setConfig((prev) => sanitizeConfig({ ...prev, ...snapshot.data() }));
       }
     });
 
@@ -250,7 +268,7 @@ export default function DashboardPage() {
   const removeRoleMapping = (index: number) => {
     setConfig((prev) => ({
       ...prev,
-      reaction_roles: prev.reaction_roles.filter((_, i) => i !== index)
+      reaction_roles: (prev.reaction_roles || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -1128,7 +1146,7 @@ export default function DashboardPage() {
                   รายการช่องกรอกข้อมูลใน Modal
                 </label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {config.form_questions.map((q, idx) => (
+                  {(config.form_questions || []).map((q, idx) => (
                     <div key={idx} style={{
                       display: "flex",
                       alignItems: "center",
@@ -1143,7 +1161,7 @@ export default function DashboardPage() {
                         type="text"
                         value={q}
                         onChange={(e) => {
-                          const updated = [...config.form_questions];
+                          const updated = [...(config.form_questions || [])];
                           updated[idx] = e.target.value;
                           setConfig({ ...config, form_questions: updated });
                         }}
@@ -1161,7 +1179,7 @@ export default function DashboardPage() {
                         onClick={() => {
                           setConfig({
                             ...config,
-                            form_questions: config.form_questions.filter((_, i) => i !== idx)
+                            form_questions: (config.form_questions || []).filter((_, i) => i !== idx)
                           });
                         }}
                         style={{
@@ -1485,9 +1503,9 @@ export default function DashboardPage() {
                       lineHeight: 1.6,
                       marginBottom: "8px"
                     }}>
-                      {config.reaction_roles.map((r, i) => (
+                      {(config.reaction_roles || []).map((r, i) => (
                         <div key={i}>
-                          {r.emoji} ➔ <span style={{ color: config.theme_color, fontWeight: 600 }}>@{r.roleName}</span>
+                          {r.emoji} ➔ <span style={{ color: config.theme_color || '#8B5CF6', fontWeight: 600 }}>@{r.roleName}</span>
                         </div>
                       ))}
                     </div>
@@ -1497,10 +1515,10 @@ export default function DashboardPage() {
                 {previewTab === "form_panel" && (
                   <>
                     <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                      📋 {config.form_title}
+                      📋 {config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ'}
                     </div>
                     <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
-                      ยินดีต้อนรับเข้าสู่ <b>{config.server_name}</b><br />
+                      ยินดีต้อนรับเข้าสู่ <b>{config.server_name || 'Server'}</b><br />
                       กรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ
                     </div>
                     <div style={{
@@ -1523,13 +1541,13 @@ export default function DashboardPage() {
                 {previewTab === "welcome_dm" && (
                   <>
                     <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                      {config.welcome_title.replace("{server}", config.server_name)}
+                      {(config.welcome_title || "").replace("{server}", config.server_name || "Server")}
                     </div>
                     <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
-                      {config.welcome_message
+                      {(config.welcome_message || "")
                         .replace("{user}", "@สมาชิก")
-                        .replace("{role}", config.reaction_roles[0]?.roleName || "MEMBERS")
-                        .replace("{server}", config.server_name)}
+                        .replace("{role}", (config.reaction_roles || [])[0]?.roleName || "MEMBERS")
+                        .replace("{server}", config.server_name || "Server")}
                     </div>
                   </>
                 )}
@@ -1542,14 +1560,14 @@ export default function DashboardPage() {
                   borderTop: "1px solid rgba(255,255,255,0.06)",
                   paddingTop: "6px"
                 }}>
-                  Discord Role Bot • {config.server_name}
+                  Discord Role Bot • {config.server_name || "Server"}
                 </div>
               </div>
 
               {/* Reaction Buttons Simulator */}
               {previewTab === "emoji_panel" && (
                 <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" }}>
-                  {config.reaction_roles.map((r, i) => (
+                  {(config.reaction_roles || []).map((r, i) => (
                     <div key={i} style={{
                       background: "rgba(43, 45, 49, 0.8)",
                       border: "1px solid rgba(255,255,255,0.1)",

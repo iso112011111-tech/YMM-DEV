@@ -26,6 +26,10 @@ const securityHeaders = [
     value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
   },
   {
+    key: "Access-Control-Allow-Origin",
+    value: "https://ymm-dev.vercel.app",
+  },
+  {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",

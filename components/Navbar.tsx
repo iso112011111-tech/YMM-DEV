@@ -1,0 +1,116 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import logo from "@/app/img/logo.png";
+import { SITE_CONFIG } from "@/data/siteData";
+
+interface NavbarProps {
+  onOpenGuide: () => void;
+}
+
+export default function Navbar({ onOpenGuide }: NavbarProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  // Close menu when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  return (
+    <header className="site-header" ref={headerRef}>
+      <nav className="nav-inner shell" aria-label="Main navigation">
+        <a className="brand" href="#top" aria-label="YMM-DEV หน้าแรก">
+          <Image
+            className="brand-logo"
+            src={logo}
+            alt="YMM-DEV logo"
+            width={44}
+            height={44}
+            priority
+          />
+          <span>{SITE_CONFIG.name}</span>
+        </a>
+
+        <div className={`nav-links${isMenuOpen ? " is-open" : ""}`}>
+          <a
+            className="nav-active"
+            href="#top"
+            aria-current="page"
+            onClick={closeMenu}
+          >
+            <span className="home-icon">⌂</span> หน้าแรก
+          </a>
+          <a href="#bots" onClick={closeMenu}>
+            บอททั้งหมด
+          </a>
+          <button
+            className="nav-guide"
+            type="button"
+            onClick={() => {
+              onOpenGuide();
+              closeMenu();
+            }}
+          >
+            วิธีใช้งาน
+          </button>
+          <a
+            href={SITE_CONFIG.links.discordSupport}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={closeMenu}
+          >
+            ติดต่อเรา
+          </a>
+        </div>
+
+        <label className="nav-search" htmlFor="bot-search">
+          <span aria-hidden="true">⌕</span>
+          <input
+            id="bot-search"
+            name="bot-search"
+            type="search"
+            placeholder="ค้นหาบอท..."
+            aria-label="ค้นหาบอทในระบบ"
+            autoComplete="off"
+          />
+        </label>
+
+        <button
+          className={`menu-toggle${isMenuOpen ? " is-open" : ""}`}
+          type="button"
+          aria-label={isMenuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </nav>
+    </header>
+  );
+}

@@ -88,14 +88,20 @@ export default function GuideModal({ bot, isOpen, onClose }: GuideModalProps) {
           ))}
         </ol>
 
-        <a
-          className="discord-button guide-action"
-          href={isLoggedIn ? bot.inviteUrl : "/api/auth/discord"}
-          target={isLoggedIn ? "_blank" : undefined}
-          rel="noopener noreferrer"
-        >
-          <span>◉</span> เพิ่มบอทตอนนี้ <b>→</b>
-        </a>
+        {isLoggedIn ? (
+          <a
+            className="discord-button guide-action"
+            href={bot.inviteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>◉</span> เพิ่มบอทตอนนี้ <b>→</b>
+          </a>
+        ) : (
+          <button className="discord-button guide-action" type="button" disabled>
+            <span>◉</span> เพิ่มบอทตอนนี้ <b>→</b>
+          </button>
+        )}
       </section>
     </div>
   );

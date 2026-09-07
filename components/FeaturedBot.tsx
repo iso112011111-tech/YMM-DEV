@@ -47,14 +47,20 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
           </div>
 
           <div className="bot-actions">
-            <a
-              className="discord-button"
-              href={isLoggedIn ? bot.inviteUrl : "/api/auth/discord"}
-              target={isLoggedIn ? "_blank" : undefined}
-              rel="noopener noreferrer"
-            >
-              <span>◉</span> เพิ่มบอทในเซิร์ฟเวอร์ <b>→</b>
-            </a>
+            {isLoggedIn ? (
+              <a
+                className="discord-button"
+                href={bot.inviteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>◉</span> เพิ่มบอทในเซิร์ฟเวอร์ <b>→</b>
+              </a>
+            ) : (
+              <button className="discord-button" type="button" disabled>
+                <span>◉</span> เพิ่มบอทในเซิร์ฟเวอร์ <b>→</b>
+              </button>
+            )}
             <button
               className="outline-button"
               type="button"

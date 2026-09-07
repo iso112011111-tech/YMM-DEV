@@ -70,20 +70,31 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
               ▣ &nbsp; ดูวิธีการใช้งาน
             </button>
             {bot.name === "BOT-ROLE" && (
-              <Link
-                className="outline-button"
-                href="/dashboard"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
-                  borderColor: "rgba(139, 92, 246, 0.5)",
-                  color: "#c4b5fd"
-                }}
-              >
-                ⚙ &nbsp; Edit Dashboard
-              </Link>
+              isLoggedIn ? (
+                <Link
+                  className="outline-button"
+                  href="/dashboard"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
+                    borderColor: "rgba(139, 92, 246, 0.5)",
+                    color: "#c4b5fd"
+                  }}
+                >
+                  ⚙ &nbsp; Edit Dashboard
+                </Link>
+              ) : (
+                <button
+                  className="outline-button"
+                  type="button"
+                  disabled
+                  title="กรุณาเข้าสู่ระบบด้วย Discord ก่อน"
+                >
+                  ⚙ &nbsp; Edit Dashboard
+                </button>
+              )
             )}
             <div className="bot-stats" aria-label="สถิติการใช้งานบอท">
               <span>

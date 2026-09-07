@@ -290,7 +290,7 @@ export default function DashboardPage() {
           {/* Right Actions: Real Server Selector & Profile & Save Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
             {/* Live Server Selector Dropdown */}
-            {botGuilds.length > 0 && !isCustomServer ? (
+            {(botGuilds.length > 0 || (profile?.guilds && profile.guilds.length > 0)) && !isCustomServer ? (
               <div style={{
                 display: "flex",
                 alignItems: "center",
@@ -309,7 +309,8 @@ export default function DashboardPage() {
                     if (selectedVal === "custom") {
                       setIsCustomServer(true);
                     } else {
-                      const selected = botGuilds.find((g) => g.id === selectedVal);
+                      const allList = botGuilds.length > 0 ? botGuilds : (profile?.guilds || []);
+                      const selected = allList.find((g) => g.id === selectedVal);
                       setConfig((prev) => ({
                         ...prev,
                         guild_id: selectedVal,
@@ -327,7 +328,7 @@ export default function DashboardPage() {
                     cursor: "pointer"
                   }}
                 >
-                  {botGuilds.map((g) => (
+                  {(botGuilds.length > 0 ? botGuilds : (profile?.guilds || [])).map((g) => (
                     <option key={g.id} value={g.id} style={{ background: "#0d1a2d", color: "#fff" }}>
                       🟢 {g.name}
                     </option>

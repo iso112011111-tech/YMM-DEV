@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const FALLBACK_TOKEN = Buffer.from(
   "TVRVME5qUTNOVGcyTURRM09EQXdOVFkyT0EuR19jUHFyLjQ4bG0waG93dk54bTJpTlJBanUwMDQtZWNOVGtXc2QtcFhfa2ZJ",
   "base64"

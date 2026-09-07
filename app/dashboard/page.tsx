@@ -101,6 +101,13 @@ export default function DashboardPage() {
   const [channels, setChannels] = useState<DiscordChannel[]>([]);
   const [roles, setRoles] = useState<DiscordRole[]>([]);
   const [isCustomServer, setIsCustomServer] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [loadingGuilds, setLoadingGuilds] = useState(true);
+
+  // Permission Checks
+  const isLoggedIn = Boolean(profile);
+  const hasBotInCurrentServer = botGuilds.some((g) => g.id === config.guild_id);
+  const isAccessible = isLoggedIn && hasBotInCurrentServer;
 
   // 1. Fetch User Profile
   useEffect(() => {
@@ -109,7 +116,8 @@ export default function DashboardPage() {
       .then((data: { profile: DiscordProfile | null }) => {
         setProfile(data.profile);
       })
-      .catch(() => setProfile(null));
+      .catch(() => setProfile(null))
+      .finally(() => setLoadingAuth(false));
   }, []);
 
   // 2. Fetch Guilds that the Bot is currently in
@@ -133,7 +141,8 @@ export default function DashboardPage() {
           });
         }
       })
-      .catch((err) => console.warn("Could not load bot guilds:", err));
+      .catch((err) => console.warn("Could not load bot guilds:", err))
+      .finally(() => setLoadingGuilds(false));
   }, []);
 
   // 3. Fetch Channels & Roles whenever selected guild_id changes
@@ -180,6 +189,14 @@ export default function DashboardPage() {
 
   // Handle Save to Firebase Firestore
   const handleSave = async () => {
+    if (!profile) {
+      alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
+      return;
+    }
+    if (!hasBotInCurrentServer) {
+      alert("ไม่สามารถบันทึกได้ เนื่องจากเซิร์ฟเวอร์นี้ยังไม่ได้ติดตั้งบอท YMM_ROLE");
+      return;
+    }
     setSaving(true);
     setSaveStatus("idle");
     try {
@@ -418,19 +435,21 @@ export default function DashboardPage() {
             {/* Save Button */}
             <button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || (!loadingAuth && !loadingGuilds && !isAccessible)}
+              title={(!loadingAuth && !loadingGuilds && !isAccessible) ? "ไม่สามารถบันทึกได้ กรุณาเข้าสู่ระบบและติดตั้งบอทในเซิร์ฟเวอร์" : "บันทึกการตั้งค่า"}
               style={{
-                background: saving 
-                  ? "#475569" 
+                background: (saving || (!loadingAuth && !loadingGuilds && !isAccessible))
+                  ? "#334155" 
                   : `linear-gradient(135deg, ${config.theme_color}, #2563EB)`,
-                color: "#fff",
+                color: (!loadingAuth && !loadingGuilds && !isAccessible) ? "#94a3b8" : "#fff",
                 border: "none",
                 padding: "8px 20px",
                 borderRadius: "10px",
                 fontWeight: 700,
                 fontSize: "0.9rem",
-                cursor: saving ? "not-allowed" : "pointer",
-                boxShadow: `0 4px 15px ${config.theme_color}44`,
+                cursor: (saving || (!loadingAuth && !loadingGuilds && !isAccessible)) ? "not-allowed" : "pointer",
+                boxShadow: isAccessible ? `0 4px 15px ${config.theme_color}44` : "none",
+                opacity: (!loadingAuth && !loadingGuilds && !isAccessible) ? 0.6 : 1,
                 transition: "all 0.2s ease",
                 display: "inline-flex",
                 alignItems: "center",
@@ -443,16 +462,141 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content Area Wrapper */}
       <div style={{
         maxWidth: "1300px",
         margin: "24px auto",
         padding: "0 24px",
-        display: "grid",
-        gridTemplateColumns: "1.2fr 1fr",
-        gap: "28px",
-        alignItems: "start"
+        position: "relative"
       }}>
+        {/* Permission Protection Gray Overlay */}
+        {!loadingAuth && !loadingGuilds && !isAccessible && (
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: "24px",
+            right: "24px",
+            bottom: 0,
+            background: "rgba(7, 17, 31, 0.78)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            zIndex: 40,
+            borderRadius: "18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            minHeight: "520px"
+          }}>
+            <div style={{
+              background: "rgba(13, 26, 45, 0.95)",
+              border: "1px solid rgba(139, 92, 246, 0.4)",
+              borderRadius: "20px",
+              padding: "40px 32px",
+              maxWidth: "520px",
+              width: "100%",
+              textAlign: "center",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.2)"
+            }}>
+              {!isLoggedIn ? (
+                <>
+                  <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🔒</div>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fff", marginBottom: "10px" }}>
+                    คุณยังไม่ได้เข้าสู่ระบบ Discord
+                  </h2>
+                  <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "28px" }}>
+                    กรุณาเข้าสู่ระบบด้วยบัญชี Discord ของคุณ เพื่อยืนยันสิทธิ์ในการดูแลเซิร์ฟเวอร์ก่อนเข้าจัดการบอท
+                  </p>
+                  <a
+                    href="/api/auth/discord?redirect=/dashboard"
+                    style={{
+                      background: "linear-gradient(135deg, #5865F2, #4752C4)",
+                      color: "#fff",
+                      padding: "12px 28px",
+                      borderRadius: "12px",
+                      fontSize: "1rem",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      boxShadow: "0 4px 15px rgba(88, 101, 242, 0.4)"
+                    }}
+                  >
+                    <span>🎮</span> เข้าสู่ระบบด้วย Discord
+                  </a>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🤖</div>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fff", marginBottom: "10px" }}>
+                    ไม่พบบอทในเซิร์ฟเวอร์นี้
+                  </h2>
+                  <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "24px" }}>
+                    เซิร์ฟเวอร์ที่คุณเลือกยังไม่ได้ติดตั้งบอท <b style={{ color: "#c4b5fd" }}>YMM_ROLE</b><br />
+                    กรุณาเชิญบอทเข้าสู่เซิร์ฟเวอร์ก่อน จึงจะสามารถตั้งค่าระบบรับยศและบันทึกข้อมูลได้ครับ
+                  </p>
+                  <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+                    <a
+                      href="https://discord.com/oauth2/authorize?client_id=1546475860478005268&permissions=8&integration_type=0&scope=bot"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        background: "linear-gradient(135deg, #8B5CF6, #3B82F6)",
+                        color: "#fff",
+                        padding: "12px 24px",
+                        borderRadius: "12px",
+                        fontSize: "0.95rem",
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 4px 15px rgba(139, 92, 246, 0.4)"
+                      }}
+                    >
+                      <span>➕</span> เชิญบอทเข้าเซิร์ฟเวอร์นี้
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoadingGuilds(true);
+                        fetch("/api/discord/guilds")
+                          .then((r) => r.json())
+                          .then((d) => { if (d.guilds) setBotGuilds(d.guilds); })
+                          .finally(() => setLoadingGuilds(false));
+                      }}
+                      style={{
+                        background: "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        color: "#e2e8f0",
+                        padding: "12px 20px",
+                        borderRadius: "12px",
+                        fontSize: "0.95rem",
+                        fontWeight: 600,
+                        cursor: "pointer"
+                      }}
+                    >
+                      🔄 ตรวจสอบใหม่อีกครั้ง
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Main Two-Column Grid Area */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1.2fr 1fr",
+          gap: "28px",
+          alignItems: "start",
+          filter: (!loadingAuth && !loadingGuilds && !isAccessible) ? "grayscale(80%) blur(2px)" : "none",
+          pointerEvents: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto",
+          userSelect: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto",
+          transition: "filter 0.3s ease"
+        }}>
         {/* Left Column: Configuration Forms */}
         <div>
           {/* Notification Toast */}
@@ -1401,5 +1545,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

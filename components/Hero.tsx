@@ -23,7 +23,7 @@ export default function Hero({ onOpenGuide }: HeroProps) {
             ใช้งานง่าย เสถียร และพร้อมดูแลตลอด 24 ชั่วโมง
           </p>
           <div className="hero-actions">
-            <a className="discord-button" href="#bots">
+            <a className="discord-button" href="/api/auth/discord">
               <span>◉</span> เข้าสู่ระบบด้วย Discord <b>→</b>
             </a>
             <button

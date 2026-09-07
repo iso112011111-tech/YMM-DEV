@@ -176,7 +176,43 @@ export const ROLE_BOT: BotConfig = {
     servers: "เพิ่มได้ทันที",
   },
   inviteUrl: SITE_CONFIG.links.roleBotInvite,
-  guideSteps: [],
+  guideSteps: [
+    {
+      step: 1,
+      title: "เชิญ BOT-ROLE เข้าเซิร์ฟเวอร์",
+      detail: "กดปุ่มเพิ่มบอท เลือกเซิร์ฟเวอร์ และกด Authorize สิทธิ์เปิดใช้งานในเซิร์ฟเวอร์ของคุณ",
+    },
+    {
+      step: 2,
+      title: "เข้าสู่ระบบ Web Dashboard",
+      detail: "กดปุ่ม Edit Dashboard บนหน้าเว็บ เพื่อปรับแต่งสีธีม ข้อความต้อนรับ และการตั้งค่าทั้งหมด",
+      codeSnippet: "https://ymm-dev.vercel.app/dashboard",
+    },
+    {
+      step: 3,
+      title: "สร้างแผงกด Emoji รับยศอัตโนมัติ",
+      detail: "ผูก Emoji กับ Role บน Web Dashboard หรือใช้คำสั่ง Slash ใน Discord",
+      codeSnippet: "/role-panel",
+    },
+    {
+      step: 4,
+      title: "สร้างแผงกรอกแบบฟอร์มยืนยันตัวตน",
+      detail: "สร้างแผงรับยศแบบ Modal Form ให้สมาชิกกรอกข้อมูลยืนยันตัวตนก่อนรับยศ",
+      codeSnippet: "/panel-form role:@สมาชิก",
+    },
+    {
+      step: 5,
+      title: "ตั้งค่าห้องแจ้งเตือน Admin Log",
+      detail: "เลือกห้องข้อความสำหรับบันทึกประวัติการรับยศของสมาชิกแบบเรียลไทม์",
+      codeSnippet: "/set-log channel:#log-รับยศ",
+    },
+    {
+      step: 6,
+      title: "ตั้งค่าข้อความต้อนรับส่วนตัว (DM)",
+      detail: "ส่งข้อความ Embed ต้อนรับสมาชิกเข้ากล่องข้อความทันทีเมื่อรับยศสำเร็จ",
+      codeSnippet: "/set-welcome",
+    },
+  ],
 };
 
 export const BOT_CATALOG: readonly BotConfig[] = [

@@ -308,26 +308,33 @@ export default function DashboardTicketPage() {
           guild_id: config.guild_id,
           guild_name: data.guild_name || prev.guild_name,
           embed_customization: {
-            ...prev.embed_customization,
+            ...DEFAULT_CONFIG.embed_customization,
             ...(data.embed_customization || {}),
           },
           ticket_config: {
-            ...prev.ticket_config,
+            ...DEFAULT_CONFIG.ticket_config,
             ...(data.ticket_config || {}),
           },
           ai_config: {
-            ...prev.ai_config,
+            ...DEFAULT_CONFIG.ai_config,
             ...(data.ai_config || {}),
-            channel_id: data.ai_config?.channel_id ?? prev.ai_config.channel_id ?? "",
+            channel_id: data.ai_config?.channel_id || "",
             channel_ids: Array.isArray(data.ai_config?.channel_ids)
               ? data.ai_config.channel_ids
-              : data.ai_config?.channel_id ? [data.ai_config.channel_id] : (prev.ai_config.channel_ids || []),
-            api_key: prev.ai_config.api_key, // keep current input in form
+              : (data.ai_config?.channel_id ? [data.ai_config.channel_id] : []),
+            api_key: prev.ai_config.api_key || "", // keep current input in form
           },
           stats: {
-            ...prev.stats,
+            ...DEFAULT_CONFIG.stats,
             ...(data.stats || {}),
           }
+        }));
+      } else {
+        // หากยังไม่มี Document สำหรับกิลด์นี้ ให้รีเซ็ตเป็นค่าเริ่มต้น ป้องกันข้อมูลเซิร์ฟเวอร์อื่นค้าง
+        setConfig((prev) => ({
+          ...DEFAULT_CONFIG,
+          guild_id: config.guild_id,
+          guild_name: prev.guild_name,
         }));
       }
     });
@@ -601,11 +608,11 @@ export default function DashboardTicketPage() {
                       setIsCustomServer(true);
                     } else {
                       const selected = botGuilds.find((g) => g.id === selectedVal);
-                      setConfig((prev) => ({
-                        ...prev,
+                      setConfig({
+                        ...DEFAULT_CONFIG,
                         guild_id: selectedVal,
-                        guild_name: selected ? selected.name : prev.guild_name
-                      }));
+                        guild_name: selected ? selected.name : "Server",
+                      });
                     }
                   }}
                   style={{
@@ -1798,6 +1805,13 @@ export default function DashboardTicketPage() {
                         e.preventDefault();
                         const matches = inputChannelUid.match(/\d{17,21}/g) || (inputChannelUid.trim() ? [inputChannelUid.trim().replace(/[<#>]/g, "")] : []);
                         if (matches.length === 0) return;
+                        if (channels.length > 0) {
+                          const foreign = matches.filter(id => !channels.some((c: any) => c.id === id));
+                          if (foreign.length > 0) {
+                            const ok = confirm(`⚠️ UID (${foreign.join(", ")}) ไม่พบในเซิร์ฟเวอร์ "${config.guild_name}"!\n\nหากเป็นห้องจากเซิร์ฟเวอร์อื่น บอทจะไม่อ่านข้อมูลเพื่อป้องกันการรั่วไหลข้ามเซิร์ฟเวอร์ คุณแน่ใจหรือไม่ว่าต้องการเพิ่ม?`);
+                            if (!ok) return;
+                          }
+                        }
                         const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
                         const newUids = matches.filter(id => !currentList.includes(id));
                         if (newUids.length === 0) {
@@ -1852,6 +1866,13 @@ export default function DashboardTicketPage() {
                       alert("กรุณากรอก UID เลขห้องก่อนกดเพิ่ม");
                       return;
                     }
+                    if (channels.length > 0) {
+                      const foreign = matches.filter(id => !channels.some((c: any) => c.id === id));
+                      if (foreign.length > 0) {
+                        const ok = confirm(`⚠️ UID (${foreign.join(", ")}) ไม่พบในเซิร์ฟเวอร์ "${config.guild_name}"!\n\nหากเป็นห้องจากเซิร์ฟเวอร์อื่น บอทจะไม่อ่านข้อมูลเพื่อป้องกันการรั่วไหลข้ามเซิร์ฟเวอร์ คุณแน่ใจหรือไม่ว่าต้องการเพิ่ม?`);
+                        if (!ok) return;
+                      }
+                    }
                     const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
                     const newUids = matches.filter(id => !currentList.includes(id));
                     if (newUids.length === 0) {
@@ -1887,73 +1908,148 @@ export default function DashboardTicketPage() {
 
               {/* List of Configured Channels */}
               <div style={{ marginTop: "14px" }}>
-                <span className="dash-label" style={{ display: "block", marginBottom: "8px" }}>
-                  📋 รายการห้องที่ AI จะเข้าไปอ่านข้อมูลอ้างอิง ({((config.ai_config.channel_ids && config.ai_config.channel_ids.length > 0) ? config.ai_config.channel_ids : (config.ai_config.channel_id ? [config.ai_config.channel_id] : [])).length} ห้อง):
-                </span>
+                {(() => {
+                  const channelList = (config.ai_config.channel_ids && config.ai_config.channel_ids.length > 0)
+                    ? config.ai_config.channel_ids
+                    : (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
+                  const orphanList = channels.length > 0
+                    ? channelList.filter(id => !channels.some((c: any) => c.id === id))
+                    : [];
 
-                {(!config.ai_config.channel_ids || config.ai_config.channel_ids.length === 0) && !config.ai_config.channel_id ? (
-                  <div style={{ textAlign: "center", padding: "18px", color: "#64748b", fontSize: "0.82rem", border: "1px dashed rgba(255, 255, 255, 0.08)", borderRadius: "8px" }}>
-                    ยังไม่ได้ระบุห้อง AI (AI จะตอบเฉพาะข้อมูลที่มีใน Knowledge Base)
-                  </div>
-                ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px" }}>
-                    {((config.ai_config.channel_ids && config.ai_config.channel_ids.length > 0)
-                      ? config.ai_config.channel_ids
-                      : (config.ai_config.channel_id ? [config.ai_config.channel_id] : [])
-                    ).map((cId) => {
-                      const found = channels.find((c: any) => c.id === cId);
-                      return (
-                        <div
-                          key={cId}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            background: "rgba(255, 255, 255, 0.03)",
-                            border: "1px solid rgba(255, 255, 255, 0.08)",
-                            borderRadius: "8px",
-                            padding: "10px 12px"
-                          }}
-                        >
-                          <div>
-                            <b style={{ color: "#fff", fontSize: "0.85rem", display: "block" }}>
-                              {found ? `#${found.name}` : "ห้อง Discord"}
-                            </b>
-                            <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontFamily: "monospace" }}>
-                              UID: {cId}
-                            </span>
-                          </div>
+                  return (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                        <span className="dash-label" style={{ display: "block" }}>
+                          📋 รายการห้องที่ AI จะเข้าไปอ่านข้อมูลอ้างอิง ({channelList.length} ห้อง):
+                        </span>
+                        {orphanList.length > 0 && (
                           <button
                             type="button"
                             onClick={() => {
-                              const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
-                              const nextList = currentList.filter((id) => id !== cId);
+                              const cleanList = channelList.filter(id => channels.some((c: any) => c.id === id));
                               setConfig((prev) => ({
                                 ...prev,
                                 ai_config: {
                                   ...prev.ai_config,
-                                  channel_ids: nextList,
-                                  channel_id: nextList[0] || "",
+                                  channel_ids: cleanList,
+                                  channel_id: cleanList[0] || "",
                                 }
                               }));
                             }}
                             style={{
-                              background: "rgba(239, 68, 68, 0.12)",
-                              border: "1px solid rgba(239, 68, 68, 0.3)",
+                              background: "rgba(239, 68, 68, 0.15)",
+                              border: "1px solid rgba(239, 68, 68, 0.4)",
                               color: "#f87171",
-                              padding: "4px 8px",
                               borderRadius: "6px",
-                              fontSize: "0.72rem",
-                              cursor: "pointer"
+                              padding: "4px 10px",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px"
                             }}
                           >
-                            ✕ ลบ
+                            🧹 ล้าง {orphanList.length} ห้องที่อยู่นอกเซิร์ฟเวอร์นี้
                           </button>
+                        )}
+                      </div>
+
+                      {orphanList.length > 0 && (
+                        <div style={{
+                          background: "rgba(239, 68, 68, 0.1)",
+                          border: "1px solid rgba(239, 68, 68, 0.3)",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          marginBottom: "12px",
+                          fontSize: "0.78rem",
+                          color: "#fca5a5",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "8px"
+                        }}>
+                          <span>⚠️ ตรวจพบ {orphanList.length} ห้องที่มาจากเซิร์ฟเวอร์อื่นหรือถูกลบไปแล้ว บอทจะไม่นำมาอ่านข้อมูลร่วมกัน กรุณากดปุ่ม <b>ล้างห้องที่อยู่นอกเซิร์ฟเวอร์</b> ด้านบนเพื่อทำความสะอาด</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      )}
+
+                      {channelList.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "18px", color: "#64748b", fontSize: "0.82rem", border: "1px dashed rgba(255, 255, 255, 0.08)", borderRadius: "8px" }}>
+                          ยังไม่ได้ระบุห้อง AI (AI จะตอบเฉพาะข้อมูลที่มีใน Knowledge Base)
+                        </div>
+                      ) : (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px" }}>
+                          {channelList.map((cId) => {
+                            const found = channels.find((c: any) => c.id === cId);
+                            const isOrphan = channels.length > 0 && !found;
+                            return (
+                              <div
+                                key={cId}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  background: isOrphan ? "rgba(239, 68, 68, 0.06)" : "rgba(255, 255, 255, 0.03)",
+                                  border: isOrphan ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(255, 255, 255, 0.08)",
+                                  borderRadius: "8px",
+                                  padding: "10px 12px"
+                                }}
+                              >
+                                <div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <b style={{ color: isOrphan ? "#f87171" : "#fff", fontSize: "0.85rem" }}>
+                                      {found ? `#${found.name}` : "ห้อง Discord"}
+                                    </b>
+                                    {isOrphan && (
+                                      <span style={{
+                                        fontSize: "0.65rem",
+                                        background: "rgba(239, 68, 68, 0.2)",
+                                        color: "#f87171",
+                                        padding: "1px 5px",
+                                        borderRadius: "4px",
+                                        fontWeight: 600
+                                      }}>
+                                        นอกเซิร์ฟเวอร์
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontFamily: "monospace" }}>
+                                    UID: {cId}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nextList = channelList.filter((id) => id !== cId);
+                                    setConfig((prev) => ({
+                                      ...prev,
+                                      ai_config: {
+                                        ...prev.ai_config,
+                                        channel_ids: nextList,
+                                        channel_id: nextList[0] || "",
+                                      }
+                                    }));
+                                  }}
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.12)",
+                                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                                    color: "#f87171",
+                                    padding: "4px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "0.72rem",
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  ✕ ลบ
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>

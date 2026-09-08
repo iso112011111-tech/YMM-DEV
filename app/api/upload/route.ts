@@ -1,9 +1,24 @@
 import { NextResponse } from "next/server";
+import { readSession, SESSION_COOKIE } from "@/lib/discordAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    const cookieHeader = request.headers.get("cookie") || "";
+    const sessionCookie = cookieHeader
+      .split(";")
+      .map((c) => c.trim().split("="))
+      .find(([name]) => name === SESSION_COOKIE)?.[1];
+    const profile = readSession(sessionCookie);
+
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: กรุณาเข้าสู่ระบบ Discord ก่อนอัปโหลดรูปภาพ" },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 

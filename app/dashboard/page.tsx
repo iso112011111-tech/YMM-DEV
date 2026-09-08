@@ -60,12 +60,12 @@ interface DiscordRole {
 }
 
 const DEFAULT_CONFIG: DashboardConfig = {
-  guild_id: "1543099793226600528",
-  server_name: "YMM DEV",
+  guild_id: "",
+  server_name: "My Server",
   theme_color: "#8B5CF6",
   system_type: "both",
-  log_channel_id: "1546477565785546813",
-  panel_channel_id: "1546477485904892004",
+  log_channel_id: "",
+  panel_channel_id: "",
   panel_title: "👑 ระบบรับยศอัตโนมัติ | Emoji Role",
   panel_description: "ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ **{server}**\nกดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨",
   welcome_enabled: true,
@@ -73,12 +73,9 @@ const DEFAULT_CONFIG: DashboardConfig = {
   welcome_message: "สวัสดี {user}\n\nคุณได้รับยศ 👑 {role} เรียบร้อยแล้ว\nขอให้สนุกกับการใช้งาน Server ของเรานะครับ 💜",
   form_title: "แบบฟอร์มกรอกข้อมูลเพื่อรับยศ",
   form_description: "ยินดีต้อนรับเข้าสู่ **{server}**\nกรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ",
-  form_role_id: "1546299207269224521",
+  form_role_id: "",
   form_questions: ["ชื่อ-นามสกุล หรือ ชื่อเล่น", "อายุ", "เหตุผลที่เข้าร่วมเซิร์ฟเวอร์"],
-  reaction_roles: [
-    { emoji: "👑", roleId: "1546299207269224521", roleName: "MEMBERS" },
-    { emoji: "⭐", roleId: "1546299334537256960", roleName: "ลูกค้า" }
-  ]
+  reaction_roles: []
 };
 
 const PRESET_COLORS = [

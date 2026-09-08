@@ -234,14 +234,26 @@ export default function DashboardTicketPage() {
   useEffect(() => {
     if (!config.guild_id) return;
 
+    let isMounted = true;
     fetch(`/api/discord/guilds?bot=ticket&guildId=${config.guild_id}`)
-      .then((res) => res.json())
-      .then((data: { channels?: DiscordChannel[]; categories?: DiscordChannel[]; roles?: DiscordRole[] }) => {
-        if (data.channels) setChannels(data.channels);
-        if (data.categories) setCategories(data.categories);
-        if (data.roles) setRoles(data.roles);
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not load guild channels/roles");
+        return res.json();
       })
-      .catch((err) => console.warn("Could not load channels/roles:", err));
+      .then((data: { channels?: DiscordChannel[]; categories?: DiscordChannel[]; roles?: DiscordRole[] }) => {
+        if (!isMounted) return;
+        setChannels(data.channels || []);
+        setCategories(data.categories || []);
+        setRoles(data.roles || []);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn("Could not load channels/roles:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [config.guild_id]);
 
   // 4. Real-time Firestore Sync for Guild Config
@@ -333,6 +345,11 @@ export default function DashboardTicketPage() {
   const handleSave = async () => {
     if (!profile) {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
+      return;
+    }
+    const userCanManage = (profile.guilds || []).some((g) => g.id === config.guild_id);
+    if (profile.guilds && profile.guilds.length > 0 && !userCanManage) {
+      alert("คุณไม่มีสิทธิ์เป็นผู้ดูแลในเซิร์ฟเวอร์นี้ ไม่สามารถบันทึกการตั้งค่าได้");
       return;
     }
     if (!hasBotInCurrentServer) {
@@ -430,6 +447,15 @@ export default function DashboardTicketPage() {
   // Add Knowledge Base Article
   const handleAddKb = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile) {
+      alert("กรุณาเข้าสู่ระบบ Discord ก่อนเพิ่มบทความ");
+      return;
+    }
+    const userCanManage = (profile.guilds || []).some((g) => g.id === config.guild_id);
+    if (profile.guilds && profile.guilds.length > 0 && !userCanManage) {
+      alert("คุณไม่มีสิทธิ์จัดการข้อมูลของเซิร์ฟเวอร์นี้");
+      return;
+    }
     if (!newKbTitle.trim() || !newKbContent.trim()) {
       alert("กรุณากรอกหัวข้อและเนื้อหาของบทความ");
       return;
@@ -468,6 +494,15 @@ export default function DashboardTicketPage() {
 
   // Delete Knowledge Base Article
   const handleDeleteKb = async (articleId: string, title: string) => {
+    if (!profile) {
+      alert("กรุณาเข้าสู่ระบบ Discord ก่อน");
+      return;
+    }
+    const userCanManage = (profile.guilds || []).some((g) => g.id === config.guild_id);
+    if (profile.guilds && profile.guilds.length > 0 && !userCanManage) {
+      alert("คุณไม่มีสิทธิ์จัดการข้อมูลของเซิร์ฟเวอร์นี้");
+      return;
+    }
     if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบทความ "${title}"?`)) return;
 
     try {
@@ -546,6 +581,11 @@ export default function DashboardTicketPage() {
                   value={config.guild_id}
                   onChange={(e) => {
                     const selectedVal = e.target.value;
+                    setChannels([]);
+                    setCategories([]);
+                    setRoles([]);
+                    setKbArticles([]);
+                    setRecentTickets([]);
                     if (selectedVal === "custom") {
                       setIsCustomServer(true);
                     } else {

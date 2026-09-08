@@ -116,6 +116,33 @@ interface DiscordRole {
   color: string;
 }
 
+function colorToDiscordStyle(hexColor?: string): "primary" | "success" | "secondary" | "danger" {
+  if (!hexColor || typeof hexColor !== "string") return "primary";
+  const cleanHex = hexColor.replace("#", "").trim();
+  if (cleanHex.length !== 6 && cleanHex.length !== 3) return "primary";
+
+  let r = 0, g = 0, b = 0;
+  if (cleanHex.length === 6) {
+    r = parseInt(cleanHex.substring(0, 2), 16);
+    g = parseInt(cleanHex.substring(2, 4), 16);
+    b = parseInt(cleanHex.substring(4, 6), 16);
+  } else {
+    r = parseInt(cleanHex[0] + cleanHex[0], 16);
+    g = parseInt(cleanHex[1] + cleanHex[1], 16);
+    b = parseInt(cleanHex[2] + cleanHex[2], 16);
+  }
+
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return "primary";
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  if (delta < 28 || (max < 80 && delta < 35)) return "secondary";
+  if (g > r + 15 && g > b + 15) return "success";
+  if (r > 150 && (r > g + 30) && (g < 170 || r > b + 20)) return "danger";
+  return "primary";
+}
+
 const DEFAULT_CONFIG: FullTicketGuildConfig = {
   guild_id: "",
   guild_name: "YMM DEV",
@@ -363,6 +390,9 @@ export default function DashboardTicketPage() {
       const activeServerName = botGuilds.find((g) => g.id === config.guild_id)?.name || config.guild_name || "Server";
       const docRef = doc(ticketDb, "guilds", config.guild_id);
 
+      const chosenButtonColor = config.embed_customization.button_color || "#5865F2";
+      const resolvedButtonStyle = colorToDiscordStyle(chosenButtonColor);
+
       const updates: any = {
         guild_id: config.guild_id,
         guild_name: activeServerName,
@@ -371,9 +401,9 @@ export default function DashboardTicketPage() {
           panel_description: config.embed_customization.panel_description || "กดปุ่มด้านล่างเพื่อสร้าง Ticket ใหม่",
           panel_color: config.embed_customization.panel_color || "#5865F2",
           button_text: config.embed_customization.button_text || "สร้าง Ticket ใหม่",
-          button_style: config.embed_customization.button_style || "primary",
+          button_style: resolvedButtonStyle,
           button_emoji: config.embed_customization.button_emoji || "🎫",
-          button_color: config.embed_customization.button_color || "#5865F2",
+          button_color: chosenButtonColor,
           welcome_message: config.embed_customization.welcome_message || "สวัสดีครับ ทีมงานจะเข้ามาช่วยเหลือในไม่ช้า",
           footer_text: config.embed_customization.footer_text || "Powered by YMM-TICKET",
           categories: config.embed_customization.categories || [
@@ -1174,10 +1204,15 @@ export default function DashboardTicketPage() {
 
                     {/* Color Presets & Custom Color Picker */}
                     <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", padding: "14px", marginBottom: "16px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
-                        <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1" }}>
-                          🎨 สีปุ่มที่ต้องการ (Button Color / Theme):
-                        </label>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1" }}>
+                            🎨 สีปุ่มที่ต้องการ (กำหนดสีเองได้อิสระ):
+                          </label>
+                          <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                            คลิกที่แถบสีเพื่อเปิด Color Picker หรือพิมพ์รหัสสี HEX
+                          </span>
+                        </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <input
                             type="color"
@@ -1186,16 +1221,20 @@ export default function DashboardTicketPage() {
                               const newColor = e.target.value;
                               setConfig((prev) => ({
                                 ...prev,
-                                embed_customization: { ...prev.embed_customization, button_color: newColor }
+                                embed_customization: {
+                                  ...prev.embed_customization,
+                                  button_color: newColor,
+                                  button_style: colorToDiscordStyle(newColor)
+                                }
                               }));
                             }}
                             style={{
-                              width: "36px",
-                              height: "32px",
+                              width: "40px",
+                              height: "36px",
                               background: "none",
                               border: "none",
                               cursor: "pointer",
-                              borderRadius: "4px"
+                              borderRadius: "6px"
                             }}
                           />
                           <input
@@ -1205,16 +1244,20 @@ export default function DashboardTicketPage() {
                               const newColor = e.target.value;
                               setConfig((prev) => ({
                                 ...prev,
-                                embed_customization: { ...prev.embed_customization, button_color: newColor }
+                                embed_customization: {
+                                  ...prev.embed_customization,
+                                  button_color: newColor,
+                                  button_style: colorToDiscordStyle(newColor)
+                                }
                               }));
                             }}
                             placeholder="#5865F2"
                             style={{
-                              width: "95px",
+                              width: "100px",
                               background: "#0b1329",
                               border: "1px solid #334155",
                               borderRadius: "6px",
-                              padding: "6px 8px",
+                              padding: "8px 10px",
                               color: "#fff",
                               fontSize: "0.85rem",
                               fontFamily: "monospace"
@@ -1224,17 +1267,17 @@ export default function DashboardTicketPage() {
                       </div>
 
                       {/* Color Presets */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "8px", marginBottom: "12px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "8px" }}>
                         {[
-                          { name: "Blurple", hex: "#5865F2", style: "primary" },
-                          { name: "Emerald", hex: "#10B981", style: "success" },
-                          { name: "Ruby Red", hex: "#EF4444", style: "danger" },
-                          { name: "Charcoal", hex: "#4B5563", style: "secondary" },
-                          { name: "Amber Gold", hex: "#F59E0B", style: "primary" },
-                          { name: "Violet", hex: "#8B5CF6", style: "primary" },
-                          { name: "Neon Pink", hex: "#EC4899", style: "danger" },
-                          { name: "Cyan", hex: "#06B6D4", style: "primary" },
-                          { name: "Flame Orange", hex: "#F97316", style: "danger" },
+                          { name: "Blurple", hex: "#5865F2" },
+                          { name: "Emerald", hex: "#10B981" },
+                          { name: "Ruby Red", hex: "#EF4444" },
+                          { name: "Charcoal", hex: "#4B5563" },
+                          { name: "Amber Gold", hex: "#F59E0B" },
+                          { name: "Violet", hex: "#8B5CF6" },
+                          { name: "Neon Pink", hex: "#EC4899" },
+                          { name: "Cyan", hex: "#06B6D4" },
+                          { name: "Flame Orange", hex: "#F97316" },
                         ].map((preset) => {
                           const isSelected = (config.embed_customization.button_color?.toUpperCase() === preset.hex.toUpperCase());
                           return (
@@ -1247,7 +1290,7 @@ export default function DashboardTicketPage() {
                                   embed_customization: {
                                     ...prev.embed_customization,
                                     button_color: preset.hex,
-                                    button_style: preset.style as any
+                                    button_style: colorToDiscordStyle(preset.hex)
                                   }
                                 }));
                               }}
@@ -1281,45 +1324,12 @@ export default function DashboardTicketPage() {
                           );
                         })}
                       </div>
-
-                      {/* Discord native style selector */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "12px", alignItems: "center", paddingTop: "8px", borderTop: "1px solid #1e293b" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#cbd5e1" }}>
-                            Discord Native Button Style (สไตล์ปุ่มบน Discord API):
-                          </label>
-                          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
-                            Discord API กำหนดให้ปุ่ม Component มีได้ 4 สไตล์สีมาตรฐาน (น้ำเงิน เขียว แดง เทา)
-                          </span>
-                        </div>
-                        <select
-                          value={config.embed_customization.button_style || "primary"}
-                          onChange={(e) => setConfig((prev) => ({
-                            ...prev,
-                            embed_customization: { ...prev.embed_customization, button_style: e.target.value as any }
-                          }))}
-                          style={{
-                            minWidth: "170px",
-                            background: "#0b1329",
-                            border: "1px solid #334155",
-                            borderRadius: "6px",
-                            padding: "8px 12px",
-                            color: "#fff",
-                            fontSize: "0.85rem"
-                          }}
-                        >
-                          <option value="primary">🔵 Primary (น้ำเงิน / Blurple)</option>
-                          <option value="success">🟢 Success (เขียว)</option>
-                          <option value="danger">🔴 Danger (แดง)</option>
-                          <option value="secondary">⚪ Secondary (เทา)</option>
-                        </select>
-                      </div>
                     </div>
 
-                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "6px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "1rem" }}>💡</span>
-                      <span style={{ fontSize: "0.75rem", color: "#93c5fd" }}>
-                        <strong>เทคนิค:</strong> คุณสามารถเลือกสี Custom Hex หรือ Palette ด้านบนได้อิสระ โดยสีเต็มรูปแบบจะแสดงผลทันทีในกล่อง Live Preview และระบบจะตั้งค่าสไตล์ปุ่ม Discord คู่กับอีโมจิสี (เช่น 🟡, 🟣, 💎) เพื่อให้ธีมบน Discord โดดเด่นสวยงาม
+                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "6px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "1.1rem" }}>🎨</span>
+                      <span style={{ fontSize: "0.8rem", color: "#93c5fd" }}>
+                        <strong>ระบบเลือกสีอิสระ:</strong> เลือกสีที่ต้องการผ่าน Color Picker หรือพิมพ์รหัส HEX ได้ตามใจชอบ สีจะถูกบันทึก แสดงใน Live Preview และบอทจะซิงค์สไตล์ปุ่มไปยัง Discord Panel ทันที
                       </span>
                     </div>
                   </div>

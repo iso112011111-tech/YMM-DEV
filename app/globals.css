@@ -2473,12 +2473,27 @@ textarea {
    ========================================================================== */
 
 .role-dashboard-root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
   min-width: 0;
-  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .role-dashboard-main {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
   min-width: 0;
+  box-sizing: border-box;
+}
+
+.role-dashboard-root *,
+.role-dashboard-main * {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Header */
@@ -2491,6 +2506,8 @@ textarea {
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px 28px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .role-header-inner {
@@ -2500,6 +2517,8 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .role-header-brand-row {
@@ -2548,6 +2567,8 @@ textarea {
   padding: 6px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .role-server-label {
@@ -2555,6 +2576,7 @@ textarea {
   color: #94a3b8;
   font-weight: 500;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .role-server-select {
@@ -2566,6 +2588,8 @@ textarea {
   outline: none;
   cursor: pointer;
   max-width: 180px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .role-server-input {
@@ -2575,7 +2599,9 @@ textarea {
   font-size: 0.85rem;
   font-weight: 600;
   width: 140px;
+  min-width: 0;
   outline: none;
+  box-sizing: border-box;
 }
 
 .role-back-btn {
@@ -2585,6 +2611,7 @@ textarea {
   font-size: 0.75rem;
   cursor: pointer;
   text-decoration: underline;
+  white-space: nowrap;
 }
 
 .role-user-pill {
@@ -2595,6 +2622,7 @@ textarea {
   padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
 }
 
 .role-user-name {
@@ -2639,6 +2667,7 @@ textarea {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .role-save-btn:disabled {
@@ -2668,6 +2697,9 @@ textarea {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #315781 transparent;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .role-tabs-bar::-webkit-scrollbar {
@@ -2731,6 +2763,47 @@ textarea {
   min-width: 0;
 }
 
+/* Preset Grid */
+.role-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Permission Protection Overlay & Modal */
+.role-perm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 19, 34, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 40;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  min-height: 520px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.role-perm-modal {
+  background: #131d31;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 40px 32px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+}
+
 /* Role Add Container */
 .role-add-container {
   display: flex;
@@ -2766,7 +2839,7 @@ textarea {
 
 .role-add-select,
 .role-add-name-input {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   max-width: 100%;
   height: 42px;
@@ -2790,7 +2863,7 @@ textarea {
 }
 
 .role-add-id-input {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   max-width: 100%;
   height: 42px;
@@ -2834,6 +2907,7 @@ textarea {
   font-weight: 700;
   color: #64748b;
   letter-spacing: 0.05em;
+  box-sizing: border-box;
 }
 
 .role-mapping-row {
@@ -2894,6 +2968,73 @@ textarea {
   white-space: nowrap;
 }
 
+/* Right Column Live Preview */
+.role-col-config,
+.role-col-preview {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.role-col-preview {
+  position: sticky;
+  top: 84px;
+}
+
+.role-preview-card {
+  background: #131d31;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.role-preview-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.role-preview-tab-btn {
+  flex: 1 1 0%;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(12, 19, 34, 0.6);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.role-preview-tab-btn.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.role-embed-sim-card {
+  background: #313338;
+  border-radius: 12px;
+  padding: 16px;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
 .dash-root,
 .tc-root {
   min-width: 0;
@@ -2926,6 +3067,10 @@ textarea {
   .dash-role-grid > div {
     min-width: 0 !important;
     max-width: 100% !important;
+  }
+
+  .role-col-preview {
+    position: static !important;
   }
 }
 
@@ -2986,13 +3131,14 @@ textarea {
     width: 100%;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   .role-server-select-wrap {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     min-width: 0 !important;
-    padding: 6px 10px !important;
+    overflow: hidden !important;
+    padding: 6px 8px !important;
     border-radius: 8px !important;
   }
 
@@ -3000,18 +3146,22 @@ textarea {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    font-size: 0.8rem !important;
+    font-size: 0.78rem !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
   }
 
   .role-server-input {
     width: 100% !important;
     min-width: 0 !important;
+    font-size: 0.78rem !important;
   }
 
   .role-save-btn {
     flex: 0 0 auto !important;
-    padding: 8px 14px !important;
-    font-size: 0.82rem !important;
+    padding: 7px 12px !important;
+    font-size: 0.8rem !important;
     white-space: nowrap !important;
   }
 
@@ -3038,8 +3188,19 @@ textarea {
   }
 
   .role-tab-btn {
-    padding: 7px 12px !important;
-    font-size: 0.8rem !important;
+    padding: 7px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .role-add-row-id {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+
+  .role-add-row-id .role-back-btn {
+    text-align: left !important;
+    padding: 2px 0 !important;
   }
 
   .role-mapping-header {
@@ -3073,6 +3234,43 @@ textarea {
     width: 100% !important;
     padding: 5px !important;
     text-align: center !important;
+  }
+
+  .role-preview-card {
+    padding: 12px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .role-preview-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .role-preview-tab-btn {
+    padding: 6px 2px !important;
+    font-size: 0.72rem !important;
+    text-align: center !important;
+  }
+
+  .role-embed-sim-card {
+    padding: 10px 8px !important;
+    border-radius: 10px !important;
+  }
+
+  .role-perm-overlay {
+    padding: 12px 8px !important;
+  }
+
+  .role-perm-modal {
+    padding: 24px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .role-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
   }
 
   .dash-root [style*="minmax(320px"],

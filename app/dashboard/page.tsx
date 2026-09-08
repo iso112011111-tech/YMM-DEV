@@ -287,7 +287,11 @@ export default function DashboardPage() {
       background: "#0c1322",
       color: "#f1f5f9",
       fontFamily: "Inter, var(--font-manrope), sans-serif",
-      paddingBottom: "80px"
+      paddingBottom: "80px",
+      overflowX: "hidden",
+      width: "100%",
+      maxWidth: "100%",
+      boxSizing: "border-box"
     }}>
       {/* Top Clean Header Navbar */}
       <header className="role-header">
@@ -466,37 +470,14 @@ export default function DashboardPage() {
       <div className="role-dashboard-main" style={{
         maxWidth: "1350px",
         margin: "18px auto",
-        position: "relative"
+        position: "relative",
+        width: "100%",
+        boxSizing: "border-box"
       }}>
         {/* Permission Protection Gray Overlay */}
         {!loadingAuth && !loadingGuilds && !isAccessible && (
-          <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(12, 19, 34, 0.85)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-            zIndex: 40,
-            borderRadius: "18px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px",
-            minHeight: "520px"
-          }}>
-            <div className="role-perm-modal" style={{
-              background: "#131d31",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "20px",
-              padding: "40px 32px",
-              maxWidth: "520px",
-              width: "100%",
-              textAlign: "center",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)"
-            }}>
+          <div className="role-perm-overlay">
+            <div className="role-perm-modal">
               {!isLoggedIn ? (
                 <>
                   <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>
@@ -564,7 +545,7 @@ export default function DashboardPage() {
           }}
         >
           {/* Left Column: Config Panels & Navigation Pills */}
-          <div>
+          <div className="role-col-config">
             {/* Save Toast Status */}
             {saveStatus === "success" && (
               <div style={{
@@ -575,7 +556,8 @@ export default function DashboardPage() {
                 borderRadius: "10px",
                 marginBottom: "20px",
                 fontSize: "0.9rem",
-                fontWeight: 600
+                fontWeight: 600,
+                wordBreak: "break-word"
               }}>
                 บันทึกการตั้งค่าสำเร็จ! ข้อมูลถูกอัปเดตเรียลไทม์เรียบร้อยแล้ว
               </div>
@@ -608,7 +590,7 @@ export default function DashboardPage() {
                   เลือกสีธีมหลักสำหรับแผงรับยศ Embed ใน Discord
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "12px", marginBottom: "24px" }}>
+                <div className="role-preset-grid">
                   {PRESET_COLORS.map((preset) => (
                     <button
                       key={preset.hex}
@@ -1102,13 +1084,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column: Live Discord Preview Card */}
-          <div style={{ position: "sticky", top: "84px" }}>
-            <div style={{
-              background: "#131d31",
-              borderRadius: "16px",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              padding: "20px"
-            }}>
+          <div className="role-col-preview">
+            <div className="role-preview-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>Live Discord Preview</span>
                 <span style={{
@@ -1127,7 +1104,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Preview Sub-tabs */}
-              <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
+              <div className="role-preview-tabs">
                 {[
                   { id: "emoji_panel", label: "Emoji Panel" },
                   { id: "form_panel", label: "Form Panel" },
@@ -1136,17 +1113,7 @@ export default function DashboardPage() {
                   <button
                     key={pTab.id}
                     onClick={() => setPreviewTab(pTab.id as typeof previewTab)}
-                    style={{
-                      flex: 1,
-                      padding: "8px 10px",
-                      borderRadius: "8px",
-                      border: "none",
-                      background: previewTab === pTab.id ? "rgba(255, 255, 255, 0.12)" : "rgba(12, 19, 34, 0.6)",
-                      color: previewTab === pTab.id ? "#fff" : "#94a3b8",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                      cursor: "pointer"
-                    }}
+                    className={`role-preview-tab-btn ${previewTab === pTab.id ? "is-active" : ""}`}
                   >
                     {pTab.label}
                   </button>
@@ -1154,12 +1121,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Discord Embed Simulator Card */}
-              <div style={{
-                background: "#313338",
-                borderRadius: "12px",
-                padding: "16px",
-                fontFamily: "'Inter', sans-serif"
-              }}>
+              <div className="role-embed-sim-card">
                 {/* Bot Header */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
                   <div style={{

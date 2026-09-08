@@ -227,11 +227,14 @@ export default function DashboardPage() {
     setSaving(true);
     setSaveStatus("idle");
     try {
-      const docRef = doc(db, "guilds", config.guild_id);
-      await setDoc(docRef, {
+      const activeServerName = botGuilds.find((g) => g.id === config.guild_id)?.name || config.server_name || "Server";
+      const configToSave = {
         ...config,
+        server_name: activeServerName,
         updated_at: new Date().toISOString()
-      }, { merge: true });
+      };
+      const docRef = doc(db, "guilds", config.guild_id);
+      await setDoc(docRef, configToSave, { merge: true });
 
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 4000);

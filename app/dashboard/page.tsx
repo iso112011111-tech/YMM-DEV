@@ -1383,25 +1383,55 @@ export default function DashboardPage() {
                   {previewTab === "form_panel" && (
                     <>
                       <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                        📋 {config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ'}
+                        {(config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ').startsWith('📋')
+                          ? (config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ')
+                          : `📋 ${config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ'}`}
                       </div>
+
                       <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px", whiteSpace: "pre-wrap" }}>
-                        {(config.form_description || "ยินดีต้อนรับเข้าสู่ **{server}**\nกรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ")
-                          .replace("{server}", config.server_name || "Server")}
+                        {(config.form_description || "ยินดีต้อนรับเข้าสู่ **{server}**\nเพื่อความปลอดภัยและความเป็นระเบียบของเซิร์ฟเวอร์\nกรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ")
+                          .replace(/{server}/g, config.server_name || "Server")}
+                        <br /><br />
+                        ยศที่จะได้รับเมื่อส่งข้อมูล: <span style={{ color: config.theme_color || '#8B5CF6', fontWeight: 600 }}>
+                          @{roles.find(r => r.id === config.form_role_id)?.name || (config.reaction_roles || [])[0]?.roleName || "MMR"}
+                        </span>
+                        <br /><br />
+                        ⚡ <i>ระบบจะตรวจสอบข้อมูลและมอบยศให้อัตโนมัติทันทีหลังส่งฟอร์ม</i>
                       </div>
+
                       <div style={{
-                        background: "#5865F2",
-                        color: "#fff",
-                        padding: "6px 12px",
-                        borderRadius: "4px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
+                        background: "rgba(0, 0, 0, 0.2)",
+                        padding: "8px 10px",
+                        borderRadius: "6px",
                         fontSize: "0.8rem",
-                        fontWeight: 600,
-                        marginTop: "6px"
+                        color: "#DBDEE1",
+                        lineHeight: 1.6,
+                        marginBottom: "8px"
                       }}>
-                        📋 กรอกข้อมูลเพื่อรับยศ
+                        <div style={{ fontWeight: 600, color: "#fff", marginBottom: "2px" }}>
+                          📝 ข้อมูลที่ต้องกรอก
+                        </div>
+                        {(config.form_questions && config.form_questions.length > 0
+                          ? config.form_questions
+                          : ["ชื่อ-นามสกุล / ชื่อเล่น", "อายุ", "เหตุผลที่เข้าร่วมเซิร์ฟเวอร์"]
+                        ).map((q, i) => (
+                          <div key={i}>• {q}</div>
+                        ))}
+                      </div>
+
+                      <div style={{
+                        background: "rgba(0, 0, 0, 0.2)",
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        color: "#DBDEE1",
+                        lineHeight: 1.6,
+                        marginBottom: "10px"
+                      }}>
+                        <div style={{ fontWeight: 600, color: "#fff", marginBottom: "2px" }}>
+                          🛡️ ความเป็นส่วนตัว
+                        </div>
+                        <div>ข้อมูลทั้งหมดจะถูกบันทึกเพื่อความปลอดภัยของคอมมูนิตี้เท่านั้น</div>
                       </div>
                     </>
                   )}
@@ -1427,9 +1457,29 @@ export default function DashboardPage() {
                     borderTop: "1px solid rgba(255,255,255,0.06)",
                     paddingTop: "6px"
                   }}>
-                    Discord Role Bot • {config.server_name || "Server"}
+                    Discord Role Bot • ปลอดภัย เชื่อถือได้ ใช้งานได้ 24 ชม.
                   </div>
                 </div>
+
+                {/* Form Button Simulator */}
+                {previewTab === "form_panel" && (
+                  <div style={{ marginTop: "10px" }}>
+                    <div style={{
+                      background: "#5865F2",
+                      color: "#fff",
+                      padding: "7px 14px",
+                      borderRadius: "4px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "0.82rem",
+                      fontWeight: 600,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                    }}>
+                      📋 กรอกข้อมูลเพื่อรับยศ
+                    </div>
+                  </div>
+                )}
 
                 {/* Reaction Simulator */}
                 {previewTab === "emoji_panel" && (

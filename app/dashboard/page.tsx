@@ -465,8 +465,7 @@ export default function DashboardPage() {
       {/* Main Content Area */}
       <div className="role-dashboard-main" style={{
         maxWidth: "1350px",
-        margin: "24px auto",
-        padding: "0 28px",
+        margin: "18px auto",
         position: "relative"
       }}>
         {/* Permission Protection Gray Overlay */}
@@ -474,8 +473,8 @@ export default function DashboardPage() {
           <div style={{
             position: "absolute",
             top: 0,
-            left: "28px",
-            right: "28px",
+            left: 0,
+            right: 0,
             bottom: 0,
             background: "rgba(12, 19, 34, 0.85)",
             backdropFilter: "blur(10px)",
@@ -603,12 +602,7 @@ export default function DashboardPage() {
 
             {/* TAB 1: Theme & Color Settings */}
             {activeTab === "appearance" && (
-              <div style={{
-                background: "#131d31",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
+              <div className="role-panel-card">
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Theme & Color Configuration</h2>
                 <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
                   เลือกสีธีมหลักสำหรับแผงรับยศ Embed ใน Discord
@@ -659,12 +653,7 @@ export default function DashboardPage() {
 
             {/* TAB 2: System Settings */}
             {activeTab === "system" && (
-              <div style={{
-                background: "#131d31",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
+              <div className="role-panel-card">
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>System Settings</h2>
                 <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
                   กำหนดรูปแบบระบบรับยศและเลือกช่องสำหรับส่ง Admin Log
@@ -697,12 +686,7 @@ export default function DashboardPage() {
 
             {/* TAB 3: Welcome DM Settings */}
             {activeTab === "welcome" && (
-              <div style={{
-                background: "#131d31",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
+              <div className="role-panel-card">
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Welcome Message Settings</h2>
                 <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
                   ส่งข้อความต้อนรับเข้ากล่องข้อความส่วนตัว (DM) เมื่อสมาชิกรับยศสำเร็จ
@@ -749,12 +733,7 @@ export default function DashboardPage() {
 
             {/* TAB 4: Form Setup */}
             {activeTab === "form" && (
-              <div style={{
-                background: "#131d31",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
+              <div className="role-panel-card">
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Modal Form Setup</h2>
                 <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
                   ตั้งค่าแบบฟอร์มยืนยันตัวตน คำถามที่จะให้กรอก และเลือก Role ที่จะมอบเมื่อทำรายการสำเร็จ
@@ -948,12 +927,7 @@ export default function DashboardPage() {
 
             {/* TAB 5: Role Automation / Emoji & Role Mapping (Matching Reference Image) */}
             {activeTab === "roles" && (
-              <div style={{
-                background: "#131d31",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
+              <div className="role-panel-card">
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                   <span style={{ fontSize: "1.1rem", color: "#fff" }}>🔗</span>
                   <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#fff" }}>Role Automation (Configure)</h2>
@@ -963,13 +937,7 @@ export default function DashboardPage() {
                 </p>
 
                 {/* Custom Panel Embed Text Configuration */}
-                <div style={{
-                  background: "#17233c",
-                  padding: "16px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  marginBottom: "20px"
-                }}>
+                <div className="role-inner-card">
                   <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
                     <span>📝</span> Custom Panel Message (ตั้งค่าข้อความในแผงรับยศ)
                   </div>
@@ -1018,112 +986,77 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Inner Card: Add New Role Link */}
-                <div style={{
-                  background: "#17233c",
-                  padding: "16px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  marginBottom: "24px"
-                }}>
+                <div className="role-inner-card">
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", fontWeight: 600, color: "#fff", marginBottom: "12px" }}>
                     <span>🔗</span> Add New Role Link
                   </div>
 
-                  <div className="role-add-grid">
-                    {/* Emoji input square box */}
-                    <input
-                      type="text"
-                      value={newEmoji}
-                      onChange={(e) => setNewEmoji(e.target.value)}
-                      placeholder="😊"
-                      style={{
-                        width: "48px",
-                        height: "42px",
-                        background: "#0f172a",
-                        border: "1px solid rgba(255, 255, 255, 0.12)",
-                        color: "#fff",
-                        borderRadius: "8px",
-                        fontSize: "1.2rem",
-                        textAlign: "center",
-                        outline: "none"
-                      }}
-                    />
+                  <div className="role-add-container">
+                    {/* Row 1: Emoji + Role selector or Role Name */}
+                    <div className="role-add-row-top">
+                      <input
+                        type="text"
+                        value={newEmoji}
+                        onChange={(e) => setNewEmoji(e.target.value)}
+                        placeholder="😊"
+                        className="role-add-emoji"
+                      />
 
-                    {/* Role selector dropdown */}
-                    {roles.length > 0 && selectedRoleId !== "custom" ? (
-                      <select
-                        value={selectedRoleId}
-                        onChange={(e) => setSelectedRoleId(e.target.value)}
-                        style={{
-                          height: "42px",
-                          background: "#0f172a",
-                          border: "1px solid rgba(255, 255, 255, 0.12)",
-                          color: "#fff",
-                          padding: "0 14px",
-                          borderRadius: "8px",
-                          fontSize: "0.9rem",
-                          outline: "none",
-                          cursor: "pointer",
-                          width: "100%"
-                        }}
-                      >
-                        {roles.map((r) => (
-                          <option key={r.id} value={r.id} style={{ background: "#0c1322" }}>
-                            @{r.name}
+                      {roles.length > 0 && selectedRoleId !== "custom" ? (
+                        <select
+                          value={selectedRoleId}
+                          onChange={(e) => setSelectedRoleId(e.target.value)}
+                          className="role-add-select"
+                        >
+                          {roles.map((r) => (
+                            <option key={r.id} value={r.id} style={{ background: "#0c1322" }}>
+                              @{r.name}
+                            </option>
+                          ))}
+                          <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
+                            Custom Role ID...
                           </option>
-                        ))}
-                        <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
-                          Custom Role ID...
-                        </option>
-                      </select>
-                    ) : (
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        </select>
+                      ) : (
                         <input
                           type="text"
                           value={customRoleName}
                           onChange={(e) => setCustomRoleName(e.target.value)}
-                          placeholder="Role Name"
-                          style={{
-                            flex: 1,
-                            minWidth: "100px",
-                            height: "42px",
-                            background: "#0f172a",
-                            border: "1px solid rgba(255, 255, 255, 0.12)",
-                            color: "#fff",
-                            padding: "0 12px",
-                            borderRadius: "8px",
-                            fontSize: "0.85rem",
-                            outline: "none"
-                          }}
+                          placeholder="ชื่อยศ (Role Name)"
+                          className="role-add-name-input"
                         />
+                      )}
+                    </div>
+
+                    {/* Row 2: Role ID input if custom */}
+                    {!(roles.length > 0 && selectedRoleId !== "custom") && (
+                      <div className="role-add-row-id">
                         <input
                           type="text"
                           value={customRoleId}
                           onChange={(e) => setCustomRoleId(e.target.value)}
-                          placeholder="Role ID"
-                          style={{
-                            flex: 1,
-                            minWidth: "100px",
-                            height: "42px",
-                            background: "#0f172a",
-                            border: "1px solid rgba(255, 255, 255, 0.12)",
-                            color: "#fff",
-                            padding: "0 12px",
-                            borderRadius: "8px",
-                            fontSize: "0.85rem",
-                            outline: "none"
-                          }}
+                          placeholder="ไอดีบทบาท (Role ID เช่น 1546299207269224521)"
+                          className="role-add-id-input"
                         />
+                        {roles.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRoleId(roles[0]?.id || "")}
+                            className="role-back-btn"
+                          >
+                            เลือกจากเซิร์ฟเวอร์
+                          </button>
+                        )}
                       </div>
                     )}
 
-                    {/* Add button */}
+                    {/* Row 3: Add button */}
                     <button
                       type="button"
                       onClick={addRoleMapping}
                       className="role-add-btn"
                     >
-                      + เพิ่ม
+                      + เพิ่มยศ (Add Role)
                     </button>
                   </div>
                 </div>

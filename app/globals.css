@@ -2460,5 +2460,193 @@ p {
   object-fit: cover;
 }
 
+/* Cross-page responsive safeguards */
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+.role-dashboard-root {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.role-dashboard-main {
+  min-width: 0;
+}
+
+.dash-root,
+.tc-root {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.dash-card,
+.dash-stat-card,
+.tc-card,
+.tc-state-box {
+  min-width: 0;
+}
+
+.dash-card * ,
+.tc-card * {
+  max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .role-dashboard-main {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .role-dashboard-main > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .role-dashboard-root header {
+    padding: 10px 14px !important;
+  }
+
+  .role-dashboard-root header > div,
+  .role-dashboard-root header > div > div:last-child {
+    align-items: stretch !important;
+  }
+
+  .role-dashboard-root header > div > div:last-child {
+    justify-content: stretch !important;
+  }
+
+  .role-dashboard-root header select,
+  .role-dashboard-root header input {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .role-dashboard-root header > div > div:last-child > * {
+    flex: 1 1 100%;
+  }
+
+  .role-dashboard-root header > div > div:last-child > button,
+  .role-dashboard-root header > div > div:last-child > a {
+    justify-content: center;
+  }
+
+  .role-dashboard-main {
+    margin-top: 16px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .role-dashboard-main > div[style*="left: \"28px\""] {
+    left: 12px !important;
+    right: 12px !important;
+    padding: 14px !important;
+  }
+
+  .role-dashboard-main > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dash-root [style*="minmax(320px"],
+  .dash-root [style*="minmax(280px"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .dash-root [style*="gridTemplateColumns"] {
+    min-width: 0;
+  }
+
+  .role-dashboard-main [style*="gridTemplateColumns: \"48px 1fr 90px\""] {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .role-dashboard-main [style*="gridTemplateColumns: \"48px 1fr 90px\""] > :last-child {
+    grid-column: 2;
+  }
+
+  .dash-tabs-bar {
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+
+  .dash-tab-btn {
+    min-height: 42px;
+  }
+
+  .dash-card-title {
+    overflow-wrap: anywhere;
+  }
+
+  .dash-input,
+  .dash-select,
+  .dash-textarea {
+    font-size: 16px;
+  }
+
+  .tc-navbar {
+    padding: 12px 14px;
+  }
+
+  .tc-main {
+    padding: 12px;
+  }
+
+  .tc-header-top,
+  .tc-ticket-chips,
+  .tc-status-tags,
+  .tc-user-chip {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .tc-ticket-title,
+  .tc-msg-text,
+  .tc-embed-desc,
+  .tc-embed-title {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-dashboard-root header > div > div:first-child span {
+    font-size: 0.95rem !important;
+  }
+
+  .role-dashboard-main > div[style*="left: \"28px\""] > div {
+    padding: 24px 16px !important;
+  }
+
+  .dash-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dash-card {
+    padding: 14px 12px;
+  }
+
+  .tc-card {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .tc-msg {
+    align-items: flex-start;
+  }
+
+  .tc-msg-body {
+    min-width: 0;
+  }
+
+  .tc-attachments img,
+  .tc-img-preview {
+    height: auto;
+  }
+}
+
 
 

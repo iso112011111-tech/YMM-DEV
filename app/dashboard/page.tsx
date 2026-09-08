@@ -282,7 +282,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{
+    <div className="role-dashboard-root" style={{
       minHeight: "100vh",
       background: "#0c1322",
       color: "#f1f5f9",
@@ -487,7 +487,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content Area */}
-      <div style={{
+      <div className="role-dashboard-main" style={{
         maxWidth: "1350px",
         margin: "24px auto",
         padding: "0 28px",

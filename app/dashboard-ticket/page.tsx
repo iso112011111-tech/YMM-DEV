@@ -32,6 +32,8 @@ interface TicketEmbedConfig {
   footer_text: string;
   button_text?: string;
   button_style?: "primary" | "success" | "secondary" | "danger";
+  button_emoji?: string;
+  button_color?: string;
   categories?: TicketCategoryField[];
 }
 
@@ -125,6 +127,8 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
     footer_text: "Powered by YMM-TICKET",
     button_text: "สร้าง Ticket ใหม่",
     button_style: "primary",
+    button_emoji: "🎫",
+    button_color: "#5865F2",
     categories: [
       { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
       { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
@@ -368,6 +372,8 @@ export default function DashboardTicketPage() {
           panel_color: config.embed_customization.panel_color || "#5865F2",
           button_text: config.embed_customization.button_text || "สร้าง Ticket ใหม่",
           button_style: config.embed_customization.button_style || "primary",
+          button_emoji: config.embed_customization.button_emoji || "🎫",
+          button_color: config.embed_customization.button_color || "#5865F2",
           welcome_message: config.embed_customization.welcome_message || "สวัสดีครับ ทีมงานจะเข้ามาช่วยเหลือในไม่ช้า",
           footer_text: config.embed_customization.footer_text || "Powered by YMM-TICKET",
           categories: config.embed_customization.categories || [
@@ -1074,56 +1080,247 @@ export default function DashboardTicketPage() {
                     />
                   </div>
 
-                  {/* Button Customization */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1", marginBottom: "6px" }}>
-                        ข้อความบนปุ่มเปิด Ticket (Button Text):
-                      </label>
-                      <input
-                        type="text"
-                        value={config.embed_customization.button_text || ""}
-                        onChange={(e) => setConfig((prev) => ({
-                          ...prev,
-                          embed_customization: { ...prev.embed_customization, button_text: e.target.value }
-                        }))}
-                        placeholder="สร้าง Ticket ใหม่"
-                        style={{
-                          width: "100%",
-                          background: "#0f172a",
-                          border: "1px solid #334155",
-                          borderRadius: "8px",
-                          padding: "10px 14px",
-                          color: "#fff",
-                          fontSize: "0.9rem"
-                        }}
-                      />
+                  {/* Button Customization Studio */}
+                  <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: "10px", padding: "18px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
+                      <div>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.95rem", fontWeight: 700, color: "#fff" }}>
+                          <span>🎛️</span> ปรับแต่งปุ่มกด Ticket (Ticket Button Studio)
+                        </label>
+                        <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                          กำหนดข้อความ อีโมจิ สีกำหนดเอง (Custom Hex Color) และสไตล์ปุ่ม Discord
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1", marginBottom: "6px" }}>
-                        สีของปุ่มเปิด Ticket (Button Color):
-                      </label>
-                      <select
-                        value={config.embed_customization.button_style || "primary"}
-                        onChange={(e) => setConfig((prev) => ({
-                          ...prev,
-                          embed_customization: { ...prev.embed_customization, button_style: e.target.value as any }
-                        }))}
-                        style={{
-                          width: "100%",
-                          background: "#0f172a",
-                          border: "1px solid #334155",
-                          borderRadius: "8px",
-                          padding: "10px 14px",
-                          color: "#fff",
-                          fontSize: "0.9rem"
-                        }}
-                      >
-                        <option value="primary">🔵 Blurple / Primary (น้ำเงิน)</option>
-                        <option value="success">🟢 Success (เขียว)</option>
-                        <option value="secondary">⚪ Secondary (เทา)</option>
-                        <option value="danger">🔴 Danger (แดง)</option>
-                      </select>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "16px" }}>
+                      {/* Button Text */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1", marginBottom: "6px" }}>
+                          ข้อความบนปุ่ม (Button Text):
+                        </label>
+                        <input
+                          type="text"
+                          value={config.embed_customization.button_text || ""}
+                          onChange={(e) => setConfig((prev) => ({
+                            ...prev,
+                            embed_customization: { ...prev.embed_customization, button_text: e.target.value }
+                          }))}
+                          placeholder="สร้าง Ticket ใหม่"
+                          style={{
+                            width: "100%",
+                            background: "#0f172a",
+                            border: "1px solid #334155",
+                            borderRadius: "8px",
+                            padding: "10px 14px",
+                            color: "#fff",
+                            fontSize: "0.9rem"
+                          }}
+                        />
+                      </div>
+
+                      {/* Button Emoji */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1", marginBottom: "6px" }}>
+                          ไอคอน/อีโมจิหน้าปุ่ม (Emoji / Icon):
+                        </label>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <input
+                            type="text"
+                            value={config.embed_customization.button_emoji || "🎫"}
+                            onChange={(e) => setConfig((prev) => ({
+                              ...prev,
+                              embed_customization: { ...prev.embed_customization, button_emoji: e.target.value }
+                            }))}
+                            placeholder="🎫"
+                            style={{
+                              width: "70px",
+                              textAlign: "center",
+                              background: "#0f172a",
+                              border: "1px solid #334155",
+                              borderRadius: "8px",
+                              padding: "10px",
+                              color: "#fff",
+                              fontSize: "1.1rem"
+                            }}
+                          />
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
+                            {["🎫", "📩", "💬", "⭐", "🟢", "🔴", "🟣", "🟡", "💎", "🔥", "👑", "✨"].map((emoji) => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => setConfig((prev) => ({
+                                  ...prev,
+                                  embed_customization: { ...prev.embed_customization, button_emoji: emoji }
+                                }))}
+                                style={{
+                                  background: config.embed_customization.button_emoji === emoji ? "#3b82f6" : "#1e293b",
+                                  border: "1px solid #334155",
+                                  borderRadius: "6px",
+                                  padding: "4px 8px",
+                                  cursor: "pointer",
+                                  fontSize: "0.9rem",
+                                  transition: "all 0.15s ease"
+                                }}
+                                title={`เลือก ${emoji}`}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Color Presets & Custom Color Picker */}
+                    <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", padding: "14px", marginBottom: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
+                        <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1" }}>
+                          🎨 สีปุ่มที่ต้องการ (Button Color / Theme):
+                        </label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <input
+                            type="color"
+                            value={config.embed_customization.button_color || "#5865F2"}
+                            onChange={(e) => {
+                              const newColor = e.target.value;
+                              setConfig((prev) => ({
+                                ...prev,
+                                embed_customization: { ...prev.embed_customization, button_color: newColor }
+                              }));
+                            }}
+                            style={{
+                              width: "36px",
+                              height: "32px",
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              borderRadius: "4px"
+                            }}
+                          />
+                          <input
+                            type="text"
+                            value={config.embed_customization.button_color || "#5865F2"}
+                            onChange={(e) => {
+                              const newColor = e.target.value;
+                              setConfig((prev) => ({
+                                ...prev,
+                                embed_customization: { ...prev.embed_customization, button_color: newColor }
+                              }));
+                            }}
+                            placeholder="#5865F2"
+                            style={{
+                              width: "95px",
+                              background: "#0b1329",
+                              border: "1px solid #334155",
+                              borderRadius: "6px",
+                              padding: "6px 8px",
+                              color: "#fff",
+                              fontSize: "0.85rem",
+                              fontFamily: "monospace"
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Color Presets */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "8px", marginBottom: "12px" }}>
+                        {[
+                          { name: "Blurple", hex: "#5865F2", style: "primary" },
+                          { name: "Emerald", hex: "#10B981", style: "success" },
+                          { name: "Ruby Red", hex: "#EF4444", style: "danger" },
+                          { name: "Charcoal", hex: "#4B5563", style: "secondary" },
+                          { name: "Amber Gold", hex: "#F59E0B", style: "primary" },
+                          { name: "Violet", hex: "#8B5CF6", style: "primary" },
+                          { name: "Neon Pink", hex: "#EC4899", style: "danger" },
+                          { name: "Cyan", hex: "#06B6D4", style: "primary" },
+                          { name: "Flame Orange", hex: "#F97316", style: "danger" },
+                        ].map((preset) => {
+                          const isSelected = (config.embed_customization.button_color?.toUpperCase() === preset.hex.toUpperCase());
+                          return (
+                            <button
+                              key={preset.name}
+                              type="button"
+                              onClick={() => {
+                                setConfig((prev) => ({
+                                  ...prev,
+                                  embed_customization: {
+                                    ...prev.embed_customization,
+                                    button_color: preset.hex,
+                                    button_style: preset.style as any
+                                  }
+                                }));
+                              }}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                background: isSelected ? "rgba(59, 130, 246, 0.2)" : "#1e293b",
+                                border: isSelected ? "2px solid #3b82f6" : "1px solid #334155",
+                                borderRadius: "6px",
+                                padding: "6px 10px",
+                                cursor: "pointer",
+                                textAlign: "left",
+                                transition: "all 0.15s ease"
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: "16px",
+                                  height: "16px",
+                                  borderRadius: "4px",
+                                  background: preset.hex,
+                                  display: "inline-block",
+                                  flexShrink: 0
+                                }}
+                              />
+                              <span style={{ fontSize: "0.75rem", color: isSelected ? "#fff" : "#cbd5e1", fontWeight: isSelected ? 700 : 500 }}>
+                                {preset.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Discord native style selector */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "12px", alignItems: "center", paddingTop: "8px", borderTop: "1px solid #1e293b" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#cbd5e1" }}>
+                            Discord Native Button Style (สไตล์ปุ่มบน Discord API):
+                          </label>
+                          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+                            Discord API กำหนดให้ปุ่ม Component มีได้ 4 สไตล์สีมาตรฐาน (น้ำเงิน เขียว แดง เทา)
+                          </span>
+                        </div>
+                        <select
+                          value={config.embed_customization.button_style || "primary"}
+                          onChange={(e) => setConfig((prev) => ({
+                            ...prev,
+                            embed_customization: { ...prev.embed_customization, button_style: e.target.value as any }
+                          }))}
+                          style={{
+                            minWidth: "170px",
+                            background: "#0b1329",
+                            border: "1px solid #334155",
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            color: "#fff",
+                            fontSize: "0.85rem"
+                          }}
+                        >
+                          <option value="primary">🔵 Primary (น้ำเงิน / Blurple)</option>
+                          <option value="success">🟢 Success (เขียว)</option>
+                          <option value="danger">🔴 Danger (แดง)</option>
+                          <option value="secondary">⚪ Secondary (เทา)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "6px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "1rem" }}>💡</span>
+                      <span style={{ fontSize: "0.75rem", color: "#93c5fd" }}>
+                        <strong>เทคนิค:</strong> คุณสามารถเลือกสี Custom Hex หรือ Palette ด้านบนได้อิสระ โดยสีเต็มรูปแบบจะแสดงผลทันทีในกล่อง Live Preview และระบบจะตั้งค่าสไตล์ปุ่ม Discord คู่กับอีโมจิสี (เช่น 🟡, 🟣, 💎) เพื่อให้ธีมบน Discord โดดเด่นสวยงาม
+                      </span>
                     </div>
                   </div>
 
@@ -2159,13 +2356,14 @@ export default function DashboardTicketPage() {
                       type="button"
                       style={{
                         background:
-                          config.embed_customization.button_style === "success"
+                          config.embed_customization.button_color ||
+                          (config.embed_customization.button_style === "success"
                             ? "#10b981"
                             : config.embed_customization.button_style === "danger"
                             ? "#ef4444"
                             : config.embed_customization.button_style === "secondary"
                             ? "#4b5563"
-                            : "#5865F2",
+                            : "#5865F2"),
                         color: "#fff",
                         border: "none",
                         padding: "8px 14px",
@@ -2178,7 +2376,7 @@ export default function DashboardTicketPage() {
                         cursor: "default"
                       }}
                     >
-                      <span>📩</span> {config.embed_customization.button_text || "สร้าง Ticket ใหม่"}
+                      <span>{config.embed_customization.button_emoji || "🎫"}</span> {config.embed_customization.button_text || "สร้าง Ticket ใหม่"}
                     </button>
                   </div>
                 </div>

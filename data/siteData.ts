@@ -40,6 +40,8 @@ export const SITE_CONFIG = {
       "https://discord.com/oauth2/authorize?client_id=1546427258711838741&permissions=8&integration_type=0&scope=bot",
     roleBotInvite:
       "https://discord.com/oauth2/authorize?client_id=1546475860478005268&permissions=8&integration_type=0&scope=bot",
+    ticketBotInvite:
+      "https://discord.com/oauth2/authorize?client_id=1546731977271677001&permissions=8&integration_type=0&scope=bot",
     roleBotDashboard: "https://ymm-dev.vercel.app/dashboard",
   },
 } as const;
@@ -215,9 +217,31 @@ export const ROLE_BOT: BotConfig = {
   ],
 };
 
+export const TICKET_BOT: BotConfig = {
+  name: "BOT-TICKET",
+  type: "BOT",
+  headline: "บอท Ticket พร้อมระบบ AI และความปลอดภัยสูง",
+  description:
+    "จัดการ Ticket อย่างเป็นระบบ ให้ AI อ่านบทความแก้ปัญหาที่คุณตั้งค่าไว้ พร้อมบันทึก Log และปรับแต่งหน้าตา Ticket ได้เอง",
+  tags: ["AI Support", "Ticket System", "High Security"],
+  features: [
+    "กำหนดให้ AI อ่านและใช้บทความการแก้ปัญหาที่แอดมินตั้งค่าไว้",
+    "บันทึก Log ทุกครั้งเมื่อมีการปิด Ticket",
+    "กำหนดสีของ Ticket และหน้าตาการใช้งานได้เอง",
+    "ระบบความปลอดภัยสูง พร้อมควบคุมการเข้าถึง Ticket",
+  ],
+  stats: {
+    users: "พร้อมใช้งาน",
+    servers: "เพิ่มได้ทันที",
+  },
+  inviteUrl: SITE_CONFIG.links.ticketBotInvite,
+  guideSteps: [],
+};
+
 export const BOT_CATALOG: readonly BotConfig[] = [
   FEATURED_BOT,
   WELCOME_BOT,
   ROLE_BOT,
+  TICKET_BOT,
 ];
 

@@ -69,6 +69,13 @@ interface TranscriptData {
   messageCount: number;
 }
 
+interface DiscordUserProfile {
+  id: string;
+  username: string;
+  globalName: string | null;
+  avatar: string | null;
+}
+
 export default function TranscriptPage() {
   const params = useParams();
   const transcriptId = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
@@ -79,6 +86,13 @@ export default function TranscriptPage() {
   const [error, setError] = useState<string | null>(null);
   const [remainingDays, setRemainingDays] = useState(30);
 
+  // Authentication & Authorization states
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+  const [authRole, setAuthRole] = useState<"author" | "admin" | null>(null);
+  const [userProfile, setUserProfile] = useState<DiscordUserProfile | null>(null);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -87,6 +101,7 @@ export default function TranscriptPage() {
         if (isMounted) {
           setError("ไม่พบรหัส Transcript");
           setLoading(false);
+          setAuthChecked(true);
         }
         return;
       }
@@ -100,6 +115,7 @@ export default function TranscriptPage() {
         if (!docSnap.exists()) {
           setTranscript(null);
           setLoading(false);
+          setAuthChecked(true);
           return;
         }
 
@@ -112,11 +128,11 @@ export default function TranscriptPage() {
           (data.createdAtMs && now - data.createdAtMs > thirtyDaysMs);
 
         if (expired) {
-          // ลบออกจาก Firestore ทันทีเมื่อมีคนเปิดอ่านหลังจากหมดอายุ
           await deleteDoc(docRef).catch(() => {});
           if (isMounted) {
             setIsExpired(true);
             setLoading(false);
+            setAuthChecked(true);
           }
           return;
         }
@@ -128,13 +144,42 @@ export default function TranscriptPage() {
         if (isMounted) {
           setRemainingDays(days);
           setTranscript(data);
-          setLoading(false);
+        }
+
+        // ตรวจสอบสิทธิ์ Discord Login & ผู้เปิดตั๋ว / แอดมินเซิร์ฟเวอร์
+        try {
+          const authRes = await fetch(`/api/transcript/${transcriptId}/auth`);
+          if (authRes.ok) {
+            const authData = await authRes.json();
+            if (isMounted) {
+              setAuthenticated(!!authData.authenticated);
+              setAuthorized(!!authData.authorized);
+              setAuthRole(authData.role || null);
+              setUserProfile(authData.profile || null);
+            }
+          } else {
+            if (isMounted) {
+              setAuthenticated(false);
+              setAuthorized(false);
+            }
+          }
+        } catch {
+          if (isMounted) {
+            setAuthenticated(false);
+            setAuthorized(false);
+          }
+        } finally {
+          if (isMounted) {
+            setAuthChecked(true);
+            setLoading(false);
+          }
         }
       } catch (err: unknown) {
         console.error("Fetch transcript error:", err);
         if (isMounted) {
           setError("เกิดข้อผิดพลาดในการโหลดประวัติการสนทนา");
           setLoading(false);
+          setAuthChecked(true);
         }
       }
     }
@@ -146,6 +191,10 @@ export default function TranscriptPage() {
     };
   }, [transcriptId]);
 
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.reload();
+  };
 
   const formatDate = (ms?: number) => {
     if (!ms) return "-";
@@ -161,7 +210,6 @@ export default function TranscriptPage() {
 
   const renderContent = (text: string) => {
     if (!text) return null;
-    // แปลง URL ให้เป็น clickable link
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
 
@@ -184,12 +232,12 @@ export default function TranscriptPage() {
   };
 
   // State 1: Loading
-  if (loading) {
+  if (loading || !authChecked) {
     return (
       <div className="tc-state-wrap">
         <div className="tc-state-box">
           <div className="tc-spinner" />
-          <p className="tc-guild-sub">กำลังโหลดประวัติการสนทนา Ticket...</p>
+          <p className="tc-guild-sub">กำลังตรวจสอบสิทธิ์การเข้าถึง Ticket Log...</p>
         </div>
       </div>
     );
@@ -233,7 +281,109 @@ export default function TranscriptPage() {
     );
   }
 
-  // State 4: Valid Transcript View
+  // State 4: Unauthenticated (ยังไม่ได้ Login Discord)
+  if (!authenticated) {
+    return (
+      <div className="tc-state-wrap">
+        <div className="tc-state-box">
+          <div className="tc-state-icon" style={{ background: "rgba(88, 101, 242, 0.12)", color: "#5865f2" }}>
+            🔒
+          </div>
+          <h1 className="tc-ticket-title">จำเป็นต้องเข้าสู่ระบบ Discord</h1>
+          <p className="tc-msg-text" style={{ marginTop: "14px", color: "#8b949e", textAlign: "center" }}>
+            หน้าบันทึกประวัติการสนทนานี้ถูกจำกัดสิทธิ์ความปลอดภัย กรุณาเข้าสู่ระบบด้วยบัญชี Discord เพื่อยืนยันตัวตนก่อนเข้าดู
+          </p>
+
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "12px 14px",
+              background: "rgba(88, 101, 242, 0.08)",
+              border: "1px solid rgba(88, 101, 242, 0.2)",
+              borderRadius: "10px",
+              fontSize: "0.78rem",
+              color: "#c9d1d9",
+              textAlign: "left",
+              lineHeight: 1.6,
+            }}
+          >
+            ℹ️ <strong>เงื่อนไขการอนุญาตเข้าดู:</strong>
+            <br />
+            • 👤 <strong>ผู้เปิดตั๋ว (Ticket Creator)</strong> ของเคสนี้
+            <br />
+            • 🛡️ <strong>ผู้ดูแลระบบ (Admin)</strong> ของเซิร์ฟเวอร์นี้เท่านั้น
+          </div>
+
+          <a
+            href={`/api/auth/discord?redirect=/transcript/${transcriptId}`}
+            className="tc-btn-discord"
+          >
+            เข้าสู่ระบบด้วย Discord
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // State 5: Forbidden (Login แล้ว แต่ไม่ใช่คนเปิด และไม่ใช่แอดมิน)
+  if (!authorized) {
+    return (
+      <div className="tc-state-wrap">
+        <div className="tc-state-box">
+          <div className="tc-state-icon rose">🚫</div>
+          <h1 className="tc-ticket-title">ไม่มีสิทธิ์เข้าถึงประวัติการสนทนานี้</h1>
+          <p className="tc-msg-text" style={{ marginTop: "14px", color: "#8b949e", textAlign: "center" }}>
+            คุณไม่มีสิทธิ์เข้าดูบันทึกประวัตินี้ เนื่องจากระบบอนุญาตเฉพาะ <strong>ผู้เปิดตั๋ว</strong> หรือ{" "}
+            <strong>ผู้ดูแลเซิร์ฟเวอร์ (Admin)</strong> ของเซิร์ฟเวอร์นี้เท่านั้น
+          </p>
+
+          {userProfile && (
+            <div
+              style={{
+                marginTop: "16px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 14px",
+                background: "#21262d",
+                borderRadius: "20px",
+                fontSize: "0.8rem",
+                color: "#c9d1d9",
+              }}
+            >
+              <span>เข้าสู่ระบบเป็น:</span>
+              <strong style={{ color: "#ffffff" }}>
+                {userProfile.globalName || userProfile.username}
+              </strong>
+            </div>
+          )}
+
+          <div
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              gap: "10px",
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <a
+              href={`/api/auth/discord?redirect=/transcript/${transcriptId}`}
+              className="tc-btn-home"
+              style={{ background: "#5865f2", borderColor: "#5865f2" }}
+            >
+              สลับบัญชี Discord
+            </a>
+            <Link href="/" className="tc-btn-home">
+              กลับหน้าหลัก
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // State 6: Authorized (เป็นผู้เปิดตั๋ว หรือแอดมินเซิร์ฟเวอร์)
   return (
     <div className="tc-root">
       {/* Top Navbar */}
@@ -260,11 +410,46 @@ export default function TranscriptPage() {
           </div>
 
           <div className="tc-status-tags">
+            {authRole === "author" ? (
+              <span className="tc-badge-author">👤 คุณเป็นผู้เปิดตั๋ว</span>
+            ) : authRole === "admin" ? (
+              <span className="tc-badge-admin">🛡️ คุณเป็นแอดมินเซิร์ฟเวอร์</span>
+            ) : null}
+
             <span className="tc-badge-closed">Ticket Closed</span>
             <span className="tc-badge-expiry">⏳ จะถูกลบใน {remainingDays} วัน</span>
+
+            {userProfile && (
+              <div className="tc-user-chip">
+                {userProfile.avatar ? (
+                  <img
+                    src={`https://cdn.discordapp.com/avatars/${userProfile.id}/${userProfile.avatar}.png?size=32`}
+                    alt=""
+                    className="tc-user-chip-avatar"
+                  />
+                ) : null}
+                <span>{userProfile.globalName || userProfile.username}</span>
+                <button
+                  type="button"
+                  onClick={logout}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#8b949e",
+                    cursor: "pointer",
+                    padding: "0 0 0 4px",
+                    fontSize: "0.74rem",
+                  }}
+                  title="ออกจากระบบ"
+                >
+                  ออก
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
+
 
       {/* Main Content Area */}
       <main className="tc-main">

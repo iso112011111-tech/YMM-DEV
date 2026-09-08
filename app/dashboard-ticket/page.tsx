@@ -53,6 +53,7 @@ interface TicketAiConfig {
   encrypted_api_key?: string | null;
   is_active: boolean;
   channel_id?: string | null;
+  channel_ids?: string[];
 }
 
 interface TicketStats {
@@ -180,6 +181,7 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
     api_key: "",
     is_active: true,
     channel_id: "",
+    channel_ids: [],
   },
   stats: {
     total_tickets: 0,
@@ -204,6 +206,7 @@ export default function DashboardTicketPage() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [inputChannelUid, setInputChannelUid] = useState("");
 
   // Knowledge Base State
   const [kbArticles, setKbArticles] = useState<KnowledgeArticle[]>([]);
@@ -316,6 +319,9 @@ export default function DashboardTicketPage() {
             ...prev.ai_config,
             ...(data.ai_config || {}),
             channel_id: data.ai_config?.channel_id ?? prev.ai_config.channel_id ?? "",
+            channel_ids: Array.isArray(data.ai_config?.channel_ids)
+              ? data.ai_config.channel_ids
+              : data.ai_config?.channel_id ? [data.ai_config.channel_id] : (prev.ai_config.channel_ids || []),
             api_key: prev.ai_config.api_key, // keep current input in form
           },
           stats: {
@@ -419,7 +425,8 @@ export default function DashboardTicketPage() {
           provider: config.ai_config.provider || "gemini",
           model: config.ai_config.model || "gemini-3.6-flash",
           is_active: Boolean(config.ai_config.is_active),
-          channel_id: config.ai_config.channel_id ? config.ai_config.channel_id.trim() : null,
+          channel_id: (config.ai_config.channel_ids && config.ai_config.channel_ids[0]) || (config.ai_config.channel_id ? config.ai_config.channel_id.trim() : null),
+          channel_ids: config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id.trim()] : []),
         },
         updated_at: serverTimestamp(),
       };
@@ -1802,28 +1809,28 @@ export default function DashboardTicketPage() {
                     />
                   </div>
 
-                  {/* AI Channel UID Input */}
+                  {/* AI Channel UIDs Management */}
                   <div style={{
                     background: "#0f172a",
                     border: "1px solid #334155",
                     borderRadius: "10px",
                     padding: "16px"
                   }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 700, color: "#fff" }}>
+                        <label style={{ display: "block", fontSize: "0.95rem", fontWeight: 700, color: "#fff" }}>
                           💬 กำหนดเลขห้อง (UID) ให้ AI อ่านเนื้อหาและรูปภาพ
                         </label>
                         <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#94a3b8" }}>
-                          ป้อนเลข UID ของห้องใน Discord เพื่อให้ AI คอยอ่านข้อความและวิเคราะห์รูปภาพ (Vision) เพื่อตอบคำถามทันที
+                          ป้อนเลข UID ของห้องใน Discord แล้วกด <b>&quot;➕ เพิ่มห้อง&quot;</b> เพื่อให้ AI คอยอ่านข้อความและวิเคราะห์รูปภาพ (Vision) เพื่อตอบคำถามทันที (เพิ่มได้หลายห้อง)
                         </p>
                       </div>
-                      {config.ai_config.channel_id && (
+                      {((config.ai_config.channel_ids && config.ai_config.channel_ids.length > 0) || config.ai_config.channel_id) && (
                         <button
                           type="button"
                           onClick={() => setConfig((prev) => ({
                             ...prev,
-                            ai_config: { ...prev.ai_config, channel_id: "" }
+                            ai_config: { ...prev.ai_config, channel_id: "", channel_ids: [] }
                           }))}
                           style={{
                             background: "rgba(239, 68, 68, 0.15)",
@@ -1835,23 +1842,43 @@ export default function DashboardTicketPage() {
                             cursor: "pointer"
                           }}
                         >
-                          ✕ ยกเลิกห้อง AI
+                          ✕ ลบห้องทั้งหมด
                         </button>
                       )}
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: channels && channels.length > 0 ? "1fr 1fr" : "1fr", gap: "10px", marginTop: "10px" }}>
+                    {/* Add Room UID Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: channels && channels.length > 0 ? "1fr 1fr auto" : "1fr auto", gap: "10px", alignItems: "end" }}>
                       <div>
                         <span style={{ display: "block", fontSize: "0.75rem", color: "#cbd5e1", marginBottom: "4px", fontWeight: 500 }}>
                           กรอก UID เลขห้องโดยตรง (Channel ID):
                         </span>
                         <input
                           type="text"
-                          value={config.ai_config.channel_id || ""}
-                          onChange={(e) => setConfig((prev) => ({
-                            ...prev,
-                            ai_config: { ...prev.ai_config, channel_id: e.target.value.trim() }
-                          }))}
+                          value={inputChannelUid}
+                          onChange={(e) => setInputChannelUid(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const rawUid = inputChannelUid.trim().replace(/[<#>]/g, "");
+                              if (!rawUid) return;
+                              const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
+                              if (currentList.includes(rawUid)) {
+                                alert("ห้องนี้มีในรายการแล้ว");
+                                return;
+                              }
+                              const updated = [...currentList, rawUid];
+                              setConfig((prev) => ({
+                                ...prev,
+                                ai_config: {
+                                  ...prev.ai_config,
+                                  channel_ids: updated,
+                                  channel_id: updated[0] || "",
+                                }
+                              }));
+                              setInputChannelUid("");
+                            }
+                          }}
                           placeholder="เช่น 123456789012345678"
                           style={{
                             width: "100%",
@@ -1868,14 +1895,15 @@ export default function DashboardTicketPage() {
                       {channels && channels.length > 0 && (
                         <div>
                           <span style={{ display: "block", fontSize: "0.75rem", color: "#cbd5e1", marginBottom: "4px", fontWeight: 500 }}>
-                            หรือเลือกจากรายชื่อห้องใน Discord:
+                            หรือเลือกห้องจาก Discord:
                           </span>
                           <select
-                            value={config.ai_config.channel_id || ""}
-                            onChange={(e) => setConfig((prev) => ({
-                              ...prev,
-                              ai_config: { ...prev.ai_config, channel_id: e.target.value }
-                            }))}
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                setInputChannelUid(e.target.value);
+                              }
+                            }}
                             style={{
                               width: "100%",
                               background: "#1e293b",
@@ -1886,7 +1914,7 @@ export default function DashboardTicketPage() {
                               fontSize: "0.85rem"
                             }}
                           >
-                            <option value="">-- เลือกห้องในเซิร์ฟเวอร์ --</option>
+                            <option value="">-- เลือกห้องเพื่อดึง UID --</option>
                             {channels.filter((c: any) => c.type === 0 || !c.type).map((c: any) => (
                               <option key={c.id} value={c.id}>
                                 #{c.name} ({c.id})
@@ -1895,13 +1923,124 @@ export default function DashboardTicketPage() {
                           </select>
                         </div>
                       )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rawUid = inputChannelUid.trim().replace(/[<#>]/g, "");
+                          if (!rawUid) {
+                            alert("กรุณากรอก UID เลขห้องก่อนกดเพิ่ม");
+                            return;
+                          }
+                          const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
+                          if (currentList.includes(rawUid)) {
+                            alert("ห้องนี้มีในรายการแล้ว");
+                            return;
+                          }
+                          const updated = [...currentList, rawUid];
+                          setConfig((prev) => ({
+                            ...prev,
+                            ai_config: {
+                              ...prev.ai_config,
+                              channel_ids: updated,
+                              channel_id: updated[0] || "",
+                            }
+                          }));
+                          setInputChannelUid("");
+                        }}
+                        style={{
+                          background: "#3b82f6",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "9px 18px",
+                          fontWeight: 600,
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          height: "38px",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        ➕ เพิ่มห้อง
+                      </button>
                     </div>
 
-                    {config.ai_config.channel_id && (
-                      <div style={{ marginTop: "10px", padding: "8px 12px", background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: "6px", fontSize: "0.8rem", color: "#93c5fd" }}>
-                        ✨ กำหนดห้องสำเร็จ: <b>UID {config.ai_config.channel_id}</b> — AI จะคอยอ่านข้อความและรูปภาพในห้องนี้เพื่อตอบคำถาม
-                      </div>
-                    )}
+                    {/* Active Channels List */}
+                    <div style={{ marginTop: "16px" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", display: "block", marginBottom: "8px" }}>
+                        📋 รายการห้องที่ AI จะเข้าไปอ่านและตอบ ({((config.ai_config.channel_ids && config.ai_config.channel_ids.length > 0) ? config.ai_config.channel_ids : (config.ai_config.channel_id ? [config.ai_config.channel_id] : [])).length} ห้อง):
+                      </span>
+
+                      {(!config.ai_config.channel_ids || config.ai_config.channel_ids.length === 0) && !config.ai_config.channel_id ? (
+                        <div style={{ padding: "14px", border: "1px dashed #334155", borderRadius: "8px", textAlign: "center", color: "#64748b", fontSize: "0.85rem" }}>
+                          ยังไม่มีห้องที่กำหนด (กรอก UID เลขห้องด้านบน แล้วกด <b>&quot;➕ เพิ่มห้อง&quot;</b>)
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          {((config.ai_config.channel_ids && config.ai_config.channel_ids.length > 0)
+                            ? config.ai_config.channel_ids
+                            : (config.ai_config.channel_id ? [config.ai_config.channel_id] : [])
+                          ).map((cId) => {
+                            const found = channels.find((c: any) => c.id === cId);
+                            return (
+                              <div
+                                key={cId}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  background: "#1e293b",
+                                  border: "1px solid #334155",
+                                  borderRadius: "8px",
+                                  padding: "10px 14px"
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  <span style={{ fontSize: "1.1rem" }}>💬</span>
+                                  <div>
+                                    <b style={{ color: "#fff", fontSize: "0.88rem" }}>
+                                      {found ? `#${found.name}` : "ห้อง Discord"}
+                                    </b>
+                                    <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontFamily: "monospace" }}>
+                                      UID: {cId}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
+                                    const nextList = currentList.filter((id) => id !== cId);
+                                    setConfig((prev) => ({
+                                      ...prev,
+                                      ai_config: {
+                                        ...prev.ai_config,
+                                        channel_ids: nextList,
+                                        channel_id: nextList[0] || "",
+                                      }
+                                    }));
+                                  }}
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.15)",
+                                    border: "1px solid rgba(239, 68, 68, 0.4)",
+                                    color: "#f87171",
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  ✕ ลบออก
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* AI Provider */}

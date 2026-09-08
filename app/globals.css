@@ -1511,3 +1511,281 @@ p {
     gap: 10px;
   }
 }
+
+/* =========================================================
+   MODERN DASHBOARD & RESPONSIVE SAAS UTILITIES
+   ========================================================= */
+
+/* Root Dashboard Wrapper */
+.dash-root {
+  min-height: 100vh;
+  background: #080d1a;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(45, 140, 255, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(88, 101, 242, 0.06), transparent);
+  color: #f1f5f9;
+  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: 80px;
+}
+
+/* Dashboard Header */
+.dash-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8, 13, 26, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 12px 20px;
+}
+
+.dash-header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dash-main {
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 20px;
+}
+
+/* Stats Cards Grid */
+.dash-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.dash-stat-card {
+  background: #0d1527;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.dash-stat-card:hover {
+  border-color: rgba(45, 140, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Tabs Navigation Bar */
+.dash-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: #0b1222;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dash-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.dash-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.dash-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dash-tab-btn.is-active {
+  background: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Split Layout for Appearance Tab */
+.dash-split-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Modern Card */
+.dash-card {
+  background: #0d1527;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.dash-card-header {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dash-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px;
+}
+
+.dash-card-subtitle {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Modern Form Controls */
+.dash-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.dash-field:last-child {
+  margin-bottom: 0;
+}
+
+.dash-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.dash-input,
+.dash-select,
+.dash-textarea {
+  width: 100%;
+  background: #090e1b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-input:focus,
+.dash-select:focus,
+.dash-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.dash-select option {
+  background: #0d1527;
+  color: #ffffff;
+}
+
+/* Discord Role Dashboard Grid (app/dashboard) */
+.dash-role-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* =========================================================
+   RESPONSIVE MEDIA QUERIES FOR DASHBOARDS
+   ========================================================= */
+
+/* Tablets (<= 1024px) */
+@media (max-width: 1024px) {
+  .dash-split-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .dash-role-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .dash-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  .dash-root {
+    padding-bottom: 100px;
+  }
+
+  .dash-header {
+    padding: 10px 14px;
+  }
+
+  .dash-header-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .dash-main {
+    margin: 16px auto;
+    padding: 0 12px;
+  }
+
+  .dash-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .dash-stat-card {
+    padding: 12px 14px;
+  }
+
+  .dash-card {
+    padding: 16px 14px;
+    border-radius: 12px;
+  }
+
+  .dash-tab-btn {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Small Mobile (<= 480px) */
+@media (max-width: 480px) {
+  .dash-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .dash-stat-card {
+    padding: 10px 12px;
+  }
+}
+

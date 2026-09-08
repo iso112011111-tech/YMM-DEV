@@ -581,14 +581,13 @@ export default function DashboardPage() {
         )}
 
         {/* Main Two-Column Grid Layout */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1.2fr 1fr",
-          gap: "28px",
-          alignItems: "start",
-          filter: (!loadingAuth && !loadingGuilds && !isAccessible) ? "grayscale(80%) blur(2px)" : "none",
-          pointerEvents: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto"
-        }}>
+        <div 
+          className="dash-role-grid"
+          style={{
+            filter: (!loadingAuth && !loadingGuilds && !isAccessible) ? "grayscale(80%) blur(2px)" : "none",
+            pointerEvents: (!loadingAuth && !loadingGuilds && !isAccessible) ? "none" : "auto"
+          }}
+        >
           {/* Left Column: Config Panels & Navigation Pills */}
           <div>
             {/* Save Toast Status */}
@@ -615,7 +614,9 @@ export default function DashboardPage() {
               padding: "6px",
               borderRadius: "14px",
               border: "1px solid rgba(255, 255, 255, 0.08)",
-              marginBottom: "24px"
+              marginBottom: "24px",
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch"
             }}>
               {[
                 { id: "appearance", label: "🎨 Theme" },
@@ -628,7 +629,8 @@ export default function DashboardPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   style={{
-                    flex: 1,
+                    flex: "1 0 auto",
+                    minWidth: "max-content",
                     padding: "10px 14px",
                     borderRadius: "10px",
                     border: "none",
@@ -662,7 +664,7 @@ export default function DashboardPage() {
                   เลือกสีธีมหลักสำหรับแผงรับยศ Embed ใน Discord
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "12px", marginBottom: "24px" }}>
                   {PRESET_COLORS.map((preset) => (
                     <button
                       key={preset.hex}

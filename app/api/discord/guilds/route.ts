@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readSession, SESSION_COOKIE } from "@/lib/discordAuth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -27,13 +28,29 @@ export async function GET(request: Request) {
   const guildId = searchParams.get("guildId");
   const botType = searchParams.get("bot"); // "ticket" or "role"
 
+  const cookieHeader = request.headers.get("cookie") || "";
+  const sessionCookie = cookieHeader
+    .split(";")
+    .map((c) => c.trim().split("="))
+    .find(([name]) => name === SESSION_COOKIE)?.[1];
+  const profile = readSession(sessionCookie);
+
   const activeToken = botType === "ticket"
     ? TICKET_BOT_TOKEN
     : (process.env.DISCORD_BOT_TOKEN || ROLE_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
 
   try {
-    // If guildId is provided, fetch channels, categories, and roles for that specific server
+    // If guildId is provided, verify user has admin access to this guild
     if (guildId) {
+      if (profile && profile.guilds && profile.guilds.length > 0) {
+        const hasAccess = profile.guilds.some((g) => g.id === guildId);
+        if (!hasAccess) {
+          return NextResponse.json(
+            { error: "Forbidden: You do not have permission to manage this server" },
+            { status: 403 }
+          );
+        }
+      }
       const [channelsRes, rolesRes] = await Promise.all([
         fetchWithToken(`https://discord.com/api/v10/guilds/${guildId}/channels`, activeToken),
         fetchWithToken(`https://discord.com/api/v10/guilds/${guildId}/roles`, activeToken)
@@ -88,8 +105,15 @@ export async function GET(request: Request) {
     }
 
     const guilds = await guildsRes.json();
+    let accessibleGuilds = Array.isArray(guilds) ? guilds : [];
+    if (profile && profile.guilds && profile.guilds.length > 0) {
+      accessibleGuilds = accessibleGuilds.filter((g: { id: string }) =>
+        profile.guilds!.some((ug) => ug.id === g.id)
+      );
+    }
+
     return NextResponse.json({
-      guilds: guilds.map((g: { id: string; name: string; icon: string | null }) => ({
+      guilds: accessibleGuilds.map((g: { id: string; name: string; icon: string | null }) => ({
         id: g.id,
         name: g.name,
         icon: g.icon

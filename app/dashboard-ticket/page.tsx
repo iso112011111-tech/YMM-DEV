@@ -25,6 +25,8 @@ interface TicketEmbedConfig {
   panel_color: string;
   welcome_message: string;
   footer_text: string;
+  button_text?: string;
+  button_style?: "primary" | "success" | "secondary" | "danger";
 }
 
 interface TicketSystemConfig {
@@ -115,6 +117,8 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
     panel_color: "#5865F2",
     welcome_message: "สวัสดีครับ ทีมงานจะเข้ามาช่วยเหลือในไม่ช้า",
     footer_text: "Powered by YMM-TICKET",
+    button_text: "สร้าง Ticket ใหม่",
+    button_style: "primary",
   },
   ticket_config: {
     category_id: "",
@@ -162,6 +166,8 @@ export default function DashboardTicketPage() {
   const [newKbImageUrl, setNewKbImageUrl] = useState("");
   const [newKbTags, setNewKbTags] = useState("");
   const [addingKb, setAddingKb] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   // Tickets List State
   const [recentTickets, setRecentTickets] = useState<TicketItem[]>([]);
@@ -356,6 +362,43 @@ export default function DashboardTicketPage() {
       setTimeout(() => setSaveStatus("idle"), 4000);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Handle image file upload from device
+  const handleImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("ขนาดไฟล์ใหญ่เกินไป กรุณาเลือกไฟล์ขนาดไม่เกิน 10MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "อัปโหลดรูปภาพล้มเหลว");
+      }
+
+      setNewKbImageUrl(data.url);
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setUploadError(err.message || "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
     }
   };
 
@@ -861,6 +904,59 @@ export default function DashboardTicketPage() {
                       }}
                     />
                   </div>
+
+                  {/* Button Customization */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1", marginBottom: "6px" }}>
+                        ข้อความบนปุ่มเปิด Ticket (Button Text):
+                      </label>
+                      <input
+                        type="text"
+                        value={config.embed_customization.button_text || ""}
+                        onChange={(e) => setConfig((prev) => ({
+                          ...prev,
+                          embed_customization: { ...prev.embed_customization, button_text: e.target.value }
+                        }))}
+                        placeholder="สร้าง Ticket ใหม่"
+                        style={{
+                          width: "100%",
+                          background: "#0f172a",
+                          border: "1px solid #334155",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          color: "#fff",
+                          fontSize: "0.9rem"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1", marginBottom: "6px" }}>
+                        สีของปุ่มเปิด Ticket (Button Color):
+                      </label>
+                      <select
+                        value={config.embed_customization.button_style || "primary"}
+                        onChange={(e) => setConfig((prev) => ({
+                          ...prev,
+                          embed_customization: { ...prev.embed_customization, button_style: e.target.value as any }
+                        }))}
+                        style={{
+                          width: "100%",
+                          background: "#0f172a",
+                          border: "1px solid #334155",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          color: "#fff",
+                          fontSize: "0.9rem"
+                        }}
+                      >
+                        <option value="primary">🔵 Blurple / Primary (น้ำเงิน)</option>
+                        <option value="success">🟢 Success (เขียว)</option>
+                        <option value="secondary">⚪ Secondary (เทา)</option>
+                        <option value="danger">🔴 Danger (แดง)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1311,26 +1407,107 @@ export default function DashboardTicketPage() {
                       />
                     </div>
 
-                    {/* Image URL Support */}
+                    {/* Image Attachment (Device Upload & URL) */}
                     <div>
-                      <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px" }}>
-                        🖼️ ลิงก์รูปภาพประกอบวิธีทำ (Image URL):
+                      <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "6px" }}>
+                        🖼️ รูปภาพประกอบบทความ (ให้ AI ใช้อ้างอิงและส่งให้ผู้ใช้ดู):
                       </label>
-                      <input
-                        type="url"
-                        value={newKbImageUrl}
-                        onChange={(e) => setNewKbImageUrl(e.target.value)}
-                        placeholder="https://example.com/guide-image.png (หากมี)"
-                        style={{
-                          width: "100%",
-                          background: "#1e293b",
-                          border: "1px solid #334155",
-                          borderRadius: "6px",
-                          padding: "8px 12px",
-                          color: "#fff",
-                          fontSize: "0.85rem"
-                        }}
-                      />
+                      
+                      {newKbImageUrl ? (
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          background: "#0f172a",
+                          border: "1px solid #3b82f6",
+                          padding: "10px",
+                          borderRadius: "8px"
+                        }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={newKbImageUrl}
+                            alt="KB Preview"
+                            style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "6px", border: "1px solid #334155" }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 600 }}>✅ มีรูปภาพแนบแล้ว</div>
+                            <div style={{ fontSize: "0.75rem", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {newKbImageUrl}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setNewKbImageUrl("")}
+                            style={{
+                              background: "#ef4444",
+                              border: "none",
+                              color: "#fff",
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              fontSize: "0.75rem",
+                              cursor: "pointer"
+                            }}
+                          >
+                            🗑️ ลบรูป
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <label style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "8px",
+                            padding: "12px",
+                            border: "2px dashed #475569",
+                            borderRadius: "8px",
+                            background: "#1e293b",
+                            cursor: uploadingImage ? "not-allowed" : "pointer",
+                            color: uploadingImage ? "#94a3b8" : "#38bdf8",
+                            fontSize: "0.85rem",
+                            fontWeight: 600,
+                            transition: "all 0.2s"
+                          }}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: "none" }}
+                              onChange={handleImageFileSelect}
+                              disabled={uploadingImage}
+                            />
+                            {uploadingImage ? (
+                              <>⏳ กำลังอัปโหลดรูปภาพ...</>
+                            ) : (
+                              <>📁 คลิกเลือกรูปภาพจากเครื่อง (PNG, JPG, WEBP)</>
+                            )}
+                          </label>
+
+                          {uploadError && (
+                            <div style={{ fontSize: "0.75rem", color: "#ef4444" }}>
+                              ⚠️ {uploadError}
+                            </div>
+                          )}
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>หรือวางลิงก์:</span>
+                            <input
+                              type="url"
+                              value={newKbImageUrl}
+                              onChange={(e) => setNewKbImageUrl(e.target.value)}
+                              placeholder="https://..."
+                              style={{
+                                flex: 1,
+                                background: "#0f172a",
+                                border: "1px solid #334155",
+                                borderRadius: "4px",
+                                padding: "4px 8px",
+                                color: "#fff",
+                                fontSize: "0.75rem"
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Tags */}
@@ -1593,7 +1770,14 @@ export default function DashboardTicketPage() {
                     <button
                       type="button"
                       style={{
-                        background: "#5865F2",
+                        background:
+                          config.embed_customization.button_style === "success"
+                            ? "#10b981"
+                            : config.embed_customization.button_style === "danger"
+                            ? "#ef4444"
+                            : config.embed_customization.button_style === "secondary"
+                            ? "#4b5563"
+                            : "#5865F2",
                         color: "#fff",
                         border: "none",
                         padding: "8px 14px",
@@ -1606,7 +1790,7 @@ export default function DashboardTicketPage() {
                         cursor: "default"
                       }}
                     >
-                      <span>📩</span> สร้าง Ticket ใหม่
+                      <span>📩</span> {config.embed_customization.button_text || "สร้าง Ticket ใหม่"}
                     </button>
                   </div>
                 </div>

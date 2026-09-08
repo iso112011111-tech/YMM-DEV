@@ -26,6 +26,7 @@ interface DashboardConfig {
   welcome_title: string;
   welcome_message: string;
   form_title: string;
+  form_description?: string;
   form_role_id: string;
   form_questions: string[];
   reaction_roles: RoleMapping[];
@@ -71,6 +72,7 @@ const DEFAULT_CONFIG: DashboardConfig = {
   welcome_title: "🎉 ยินดีต้อนรับสู่ {server}!",
   welcome_message: "สวัสดี {user}\n\nคุณได้รับยศ 👑 {role} เรียบร้อยแล้ว\nขอให้สนุกกับการใช้งาน Server ของเรานะครับ 💜",
   form_title: "แบบฟอร์มกรอกข้อมูลเพื่อรับยศ",
+  form_description: "ยินดีต้อนรับเข้าสู่ **{server}**\nกรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ",
   form_role_id: "1546299207269224521",
   form_questions: ["ชื่อ-นามสกุล หรือ ชื่อเล่น", "อายุ", "เหตุผลที่เข้าร่วมเซิร์ฟเวอร์"],
   reaction_roles: [
@@ -102,6 +104,7 @@ function sanitizeConfig(data: any): DashboardConfig {
     welcome_title: data?.welcome_title || DEFAULT_CONFIG.welcome_title,
     welcome_message: data?.welcome_message || DEFAULT_CONFIG.welcome_message,
     form_title: data?.form_title || DEFAULT_CONFIG.form_title,
+    form_description: data?.form_description || DEFAULT_CONFIG.form_description,
     form_role_id: data?.form_role_id || DEFAULT_CONFIG.form_role_id,
     form_questions: Array.isArray(data?.form_questions) ? data.form_questions : [...DEFAULT_CONFIG.form_questions],
     reaction_roles: Array.isArray(data?.reaction_roles) ? data.reaction_roles : [...DEFAULT_CONFIG.reaction_roles],
@@ -802,15 +805,17 @@ export default function DashboardPage() {
               }}>
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "6px" }}>Modal Form Setup</h2>
                 <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px" }}>
-                  ตั้งค่าแบบฟอร์มยืนยันตัวตนสำหรับสมาชิกก่อนรับยศ
+                  ตั้งค่าแบบฟอร์มยืนยันตัวตน คำถามที่จะให้กรอก และเลือก Role ที่จะมอบเมื่อทำรายการสำเร็จ
                 </p>
 
+                {/* Form Title Input */}
                 <div style={{ marginBottom: "16px" }}>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Form Title</label>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Form Title (หัวข้อแบบฟอร์ม)</label>
                   <input
                     type="text"
                     value={config.form_title}
                     onChange={(e) => setConfig({ ...config, form_title: e.target.value })}
+                    placeholder="แบบฟอร์มกรอกข้อมูลเพื่อรับยศ"
                     style={{
                       width: "100%",
                       background: "#0c1322",
@@ -821,6 +826,170 @@ export default function DashboardPage() {
                       outline: "none"
                     }}
                   />
+                </div>
+
+                {/* Form Description Input */}
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Form Description (คำอธิบายแผงแบบฟอร์ม)</label>
+                  <textarea
+                    rows={3}
+                    value={config.form_description || ""}
+                    onChange={(e) => setConfig({ ...config, form_description: e.target.value })}
+                    placeholder="ยินดีต้อนรับเข้าสู่ **{server}**&#10;กรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ"
+                    style={{
+                      width: "100%",
+                      background: "#0c1322",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#fff",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      outline: "none",
+                      resize: "vertical"
+                    }}
+                  />
+                </div>
+
+                {/* Form Assigned Role Selector */}
+                <div style={{ marginBottom: "24px" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>Assigned Role (Role ที่จะมอบเมื่อกรอกฟอร์มผ่าน)</label>
+                  {roles.length > 0 ? (
+                    <select
+                      value={config.form_role_id}
+                      onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
+                      style={{
+                        width: "100%",
+                        background: "#0c1322",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#fff",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        outline: "none",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id} style={{ background: "#0c1322" }}>
+                          @{r.name} (ID: {r.id})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={config.form_role_id}
+                      onChange={(e) => setConfig({ ...config, form_role_id: e.target.value })}
+                      placeholder="Role ID เช่น 1546299207269224521"
+                      style={{
+                        width: "100%",
+                        background: "#0c1322",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#fff",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        outline: "none"
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Form Questions List */}
+                <div style={{
+                  background: "#17233c",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff" }}>
+                      📝 รายการช่องคำถามใน Modal Form (สูงสุด 5 ข้อ)
+                    </label>
+                    <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                      {(config.form_questions || []).length}/5 ข้อ
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                    {(config.form_questions || []).map((q, idx) => (
+                      <div key={idx} style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        background: "#0f172a",
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(255, 255, 255, 0.08)"
+                      }}>
+                        <span style={{ color: "#94a3b8", fontSize: "0.8rem", fontWeight: 600, width: "24px" }}>#{idx + 1}</span>
+                        <input
+                          type="text"
+                          value={q}
+                          onChange={(e) => {
+                            const updated = [...(config.form_questions || [])];
+                            updated[idx] = e.target.value;
+                            setConfig({ ...config, form_questions: updated });
+                          }}
+                          style={{
+                            flex: 1,
+                            background: "transparent",
+                            border: "none",
+                            color: "#fff",
+                            fontSize: "0.85rem",
+                            outline: "none"
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfig({
+                              ...config,
+                              form_questions: (config.form_questions || []).filter((_, i) => i !== idx)
+                            });
+                          }}
+                          style={{
+                            background: "rgba(239, 68, 68, 0.2)",
+                            border: "none",
+                            color: "#fca5a5",
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.75rem",
+                            fontWeight: 600
+                          }}
+                        >
+                          ลบ
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add New Question Input */}
+                  {(config.form_questions || []).length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newQ = prompt("พิมพ์คำถามที่ต้องการเพิ่มในแบบฟอร์ม:");
+                        if (newQ && newQ.trim()) {
+                          setConfig({
+                            ...config,
+                            form_questions: [...(config.form_questions || []), newQ.trim()]
+                          });
+                        }
+                      }}
+                      style={{
+                        width: "100%",
+                        background: "#2563EB",
+                        color: "#fff",
+                        border: "none",
+                        padding: "10px",
+                        borderRadius: "8px",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        cursor: "pointer"
+                      }}
+                    >
+                      + เพิ่มช่องคำถามใหม่
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -1216,9 +1385,9 @@ export default function DashboardPage() {
                       <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
                         📋 {config.form_title || 'แบบฟอร์มกรอกข้อมูลเพื่อรับยศ'}
                       </div>
-                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
-                        ยินดีต้อนรับเข้าสู่ <b>{config.server_name || 'Server'}</b><br />
-                        กรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ
+                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px", whiteSpace: "pre-wrap" }}>
+                        {(config.form_description || "ยินดีต้อนรับเข้าสู่ **{server}**\nกรุณากดปุ่มด้านล่างเพื่อกรอกแบบฟอร์มยืนยันตัวตนรับยศ")
+                          .replace("{server}", config.server_name || "Server")}
                       </div>
                       <div style={{
                         background: "#5865F2",

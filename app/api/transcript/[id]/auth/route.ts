@@ -1,74 +1,10 @@
 import { NextResponse } from "next/server";
 import { readSession, SESSION_COOKIE } from "@/lib/discordAuth";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import fs from "fs";
-import path from "path";
+import { getTicketAdminDb } from "@/lib/serverFirestore";
 
 const TICKET_BOT_TOKEN = (process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TICKET_BOT_TOKEN || "")
   .replace(/['"]/g, "")
   .trim();
-
-function getAdminFirestore() {
-  if (getApps().length === 0) {
-    let credential;
-
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      try {
-        credential = cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY));
-      } catch (e) {
-        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY parse error:", e);
-      }
-    } else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-      try {
-        credential = cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON));
-      } catch (e) {
-        console.warn("FIREBASE_SERVICE_ACCOUNT_JSON parse error:", e);
-      }
-    } else if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-      credential = cert({
-        projectId: process.env.FIREBASE_PROJECT_ID || "botticket-8b709",
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      });
-    } else {
-      const pathsToCheck = [
-        path.resolve(process.cwd(), "serviceAccountKey.json"),
-        path.resolve(process.cwd(), "../botticket/serviceAccountKey.json"),
-      ];
-      for (const p of pathsToCheck) {
-        if (fs.existsSync(p)) {
-          try {
-            const raw = fs.readFileSync(p, "utf8");
-            credential = cert(JSON.parse(raw));
-            break;
-          } catch (e) {
-            console.warn(`Error reading service account from ${p}:`, e);
-          }
-        }
-      }
-    }
-
-    if (credential) {
-      initializeApp({
-        credential,
-        projectId: process.env.FIREBASE_PROJECT_ID || "botticket-8b709",
-      });
-    } else {
-      try {
-        initializeApp({
-          projectId: process.env.FIREBASE_PROJECT_ID || "botticket-8b709",
-        });
-      } catch (e) {
-        console.warn("Firebase Admin initializeApp fallback error:", e);
-      }
-    }
-  }
-
-  const db = getFirestore();
-  db.settings({ ignoreUndefinedProperties: true });
-  return db;
-}
 
 async function checkIsServerAdmin(guildId: string, userId: string): Promise<boolean> {
   if (!TICKET_BOT_TOKEN) return false;
@@ -154,7 +90,7 @@ export async function GET(
 
   // 2. ดึงข้อมูล Transcript ผ่าน Firebase Admin SDK (Bypass Security Rules ปลอดภัยฝั่ง Server)
   try {
-    const adminDb = getAdminFirestore();
+    const adminDb = getTicketAdminDb();
     const docRef = adminDb.collection("transcripts").doc(transcriptId);
     const docSnap = await docRef.get();
 

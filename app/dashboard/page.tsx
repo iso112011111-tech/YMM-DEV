@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/app/img/logo.png";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 
 interface RoleMapping {
   emoji: string;
@@ -187,31 +185,33 @@ export default function DashboardPage() {
       .catch((err) => console.warn("Could not load channels/roles:", err));
   }, [config.guild_id, selectedRoleId]);
 
-  // 4. Real-time Firebase Firestore Sync for current guild
+  // 4. Server API Fetch for current guild config
   useEffect(() => {
     if (!config.guild_id || config.guild_id === "default_server") return;
-    const docRef = doc(db, "guilds", config.guild_id);
+    let isMounted = true;
 
-    // Initial fetch
-    getDoc(docRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        setConfig((prev) => sanitizeConfig({ ...prev, ...snapshot.data() }));
+    async function loadConfig() {
+      try {
+        const res = await fetch(`/api/dashboard/role-config?guild_id=${config.guild_id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.config) {
+            setConfig((prev) => sanitizeConfig({ ...prev, ...data.config }));
+          }
+        }
+      } catch (err) {
+        console.warn("Role config fetch notice:", err);
       }
-    }).catch((err) => {
-      console.warn("Firestore fetch notice:", err);
-    });
+    }
 
-    // Real-time sync listener
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setConfig((prev) => sanitizeConfig({ ...prev, ...snapshot.data() }));
-      }
-    });
+    loadConfig();
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+    };
   }, [config.guild_id]);
 
-  // Handle Save to Firebase Firestore
+  // Handle Save via Server API Route
   const handleSave = async () => {
     if (!profile) {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
@@ -228,15 +228,24 @@ export default function DashboardPage() {
       const configToSave = {
         ...config,
         server_name: activeServerName,
-        updated_at: new Date().toISOString()
       };
-      const docRef = doc(db, "guilds", config.guild_id);
-      await setDoc(docRef, configToSave, { merge: true });
+
+      const res = await fetch("/api/dashboard/role-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(configToSave),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "บันทึกข้อมูลล้มเหลว");
+      }
 
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 4000);
-    } catch (error) {
-      console.error("Failed to save to Firestore:", error);
+    } catch (error: any) {
+      console.error("Failed to save via Server API:", error);
+      alert(error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 4000);
     } finally {

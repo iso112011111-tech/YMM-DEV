@@ -4,20 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/app/img/logo.png";
-import { ticketDb } from "@/lib/firebaseTicket";
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  onSnapshot, 
-  collection, 
-  addDoc, 
-  deleteDoc, 
-  serverTimestamp,
-  query,
-  orderBy,
-  limit
-} from "firebase/firestore";
 
 export interface TicketCategoryField {
   name: string;
@@ -295,103 +281,93 @@ export default function DashboardTicketPage() {
     };
   }, [config.guild_id]);
 
-  // 4. Real-time Firestore Sync for Guild Config
-  useEffect(() => {
-    if (!config.guild_id) return;
-    const docRef = doc(ticketDb, "guilds", config.guild_id);
-
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setConfig((prev) => ({
-          ...prev,
-          guild_id: config.guild_id,
-          guild_name: data.guild_name || prev.guild_name,
-          embed_customization: {
-            ...DEFAULT_CONFIG.embed_customization,
-            ...(data.embed_customization || {}),
-          },
-          ticket_config: {
-            ...DEFAULT_CONFIG.ticket_config,
-            ...(data.ticket_config || {}),
-          },
-          ai_config: {
-            ...DEFAULT_CONFIG.ai_config,
-            ...(data.ai_config || {}),
-            channel_id: data.ai_config?.channel_id || "",
-            channel_ids: Array.isArray(data.ai_config?.channel_ids)
-              ? data.ai_config.channel_ids
-              : (data.ai_config?.channel_id ? [data.ai_config.channel_id] : []),
-            api_key: prev.ai_config.api_key || "", // keep current input in form
-          },
-          stats: {
-            ...DEFAULT_CONFIG.stats,
-            ...(data.stats || {}),
-          }
-        }));
-      } else {
-        // หากยังไม่มี Document สำหรับกิลด์นี้ ให้รีเซ็ตเป็นค่าเริ่มต้น ป้องกันข้อมูลเซิร์ฟเวอร์อื่นค้าง
-        setConfig((prev) => ({
-          ...DEFAULT_CONFIG,
-          guild_id: config.guild_id,
-          guild_name: prev.guild_name,
-        }));
+  // 4. Server API Fetch for Guild Config
+  const fetchTicketConfig = async (targetGuildId: string) => {
+    if (!targetGuildId) return;
+    try {
+      const res = await fetch(`/api/dashboard/ticket-config?guild_id=${targetGuildId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.config) {
+          const cfg = data.config;
+          setConfig((prev) => ({
+            ...prev,
+            guild_id: targetGuildId,
+            guild_name: cfg.guild_name || prev.guild_name,
+            embed_customization: {
+              ...DEFAULT_CONFIG.embed_customization,
+              ...(cfg.embed_customization || {}),
+            },
+            ticket_config: {
+              ...DEFAULT_CONFIG.ticket_config,
+              ...(cfg.ticket_config || {}),
+            },
+            ai_config: {
+              ...DEFAULT_CONFIG.ai_config,
+              ...(cfg.ai_config || {}),
+              channel_id: cfg.ai_config?.channel_id || "",
+              channel_ids: Array.isArray(cfg.ai_config?.channel_ids)
+                ? cfg.ai_config.channel_ids
+                : (cfg.ai_config?.channel_id ? [cfg.ai_config.channel_id] : []),
+              api_key: prev.ai_config.api_key || "", // keep current input in form
+            },
+            stats: {
+              ...DEFAULT_CONFIG.stats,
+              ...(cfg.stats || {}),
+            }
+          }));
+        }
       }
-    });
+    } catch (err) {
+      console.warn("Ticket config fetch notice:", err);
+    }
+  };
 
-    return () => unsubscribe();
-  }, [config.guild_id]);
+  // 5. Server API Fetch for Knowledge Base
+  const fetchKnowledgeBase = async (targetGuildId: string) => {
+    if (!targetGuildId) return;
+    try {
+      const res = await fetch(`/api/dashboard/ticket-knowledge?guild_id=${targetGuildId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.articles)) {
+          setKbArticles(data.articles);
+        }
+      }
+    } catch (err) {
+      console.warn("Knowledge base fetch notice:", err);
+    }
+  };
 
-  // 5. Real-time Knowledge Base Sync
+  // 6. Server API Fetch for Recent Tickets
+  const fetchRecentTickets = async (targetGuildId: string) => {
+    if (!targetGuildId) return;
+    try {
+      const res = await fetch(`/api/dashboard/ticket-list?guild_id=${targetGuildId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.tickets)) {
+          setRecentTickets(data.tickets);
+        }
+      }
+    } catch (err) {
+      console.warn("Recent tickets fetch notice:", err);
+    }
+  };
+
   useEffect(() => {
     if (!config.guild_id) return;
-    const kbCol = collection(ticketDb, "guilds", config.guild_id, "knowledge_base");
-    const q = query(kbCol, orderBy("created_at", "desc"), limit(50));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items: KnowledgeArticle[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        title: doc.data().title || "ไม่มีหัวข้อ",
-        category: doc.data().category || "general",
-        content: doc.data().content || "",
-        image_url: doc.data().image_url || "",
-        tags: doc.data().tags || [],
-        created_at: doc.data().created_at,
-      }));
-      setKbArticles(items);
-    }, (err) => {
-      console.warn("Knowledge base listener note:", err.message);
-    });
+    const loadAll = async () => {
+      await fetchTicketConfig(config.guild_id);
+      await fetchKnowledgeBase(config.guild_id);
+      await fetchRecentTickets(config.guild_id);
+    };
 
-    return () => unsubscribe();
+    loadAll();
   }, [config.guild_id]);
 
-  // 6. Real-time Recent Tickets Sync
-  useEffect(() => {
-    if (!config.guild_id) return;
-    const ticketsCol = collection(ticketDb, "guilds", config.guild_id, "tickets");
-    const q = query(ticketsCol, orderBy("created_at", "desc"), limit(20));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items: TicketItem[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ticket_number: doc.data().ticket_number || 0,
-        subject: doc.data().subject || "ไม่มีหัวข้อ",
-        author_tag: doc.data().author_tag || "User",
-        status: doc.data().status || "open",
-        priority: doc.data().priority || "normal",
-        csat_score: doc.data().csat_score ?? null,
-        created_at: doc.data().created_at,
-      }));
-      setRecentTickets(items);
-    }, (err) => {
-      console.warn("Tickets listener note:", err.message);
-    });
-
-    return () => unsubscribe();
-  }, [config.guild_id]);
-
-  // Save Config to Firestore
+  // Save Config via Server API Route with Server-Side AES-256-GCM Encryption
   const handleSave = async () => {
     if (!profile) {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
@@ -407,8 +383,6 @@ export default function DashboardTicketPage() {
 
     try {
       const activeServerName = botGuilds.find((g) => g.id === config.guild_id)?.name || config.guild_name || "Server";
-      const docRef = doc(ticketDb, "guilds", config.guild_id);
-
       const chosenButtonColor = config.embed_customization.button_color || "#5865F2";
       const resolvedButtonStyle = colorToDiscordStyle(chosenButtonColor);
 
@@ -435,20 +409,41 @@ export default function DashboardTicketPage() {
           channel_id: (config.ai_config.channel_ids && config.ai_config.channel_ids[0]) || (config.ai_config.channel_id ? config.ai_config.channel_id.trim() : null),
           channel_ids: config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id.trim()] : []),
         },
-        updated_at: serverTimestamp(),
       };
 
-      // If user typed a new API Key in web form
+      // Safely pass plain API key to server route for immediate AES-256-GCM encryption
       if (config.ai_config.api_key && config.ai_config.api_key.trim()) {
-        updates.ai_config.raw_api_key_web = config.ai_config.api_key.trim();
+        updates.ai_config.api_key = config.ai_config.api_key.trim();
       }
 
-      await setDoc(docRef, updates, { merge: true });
+      const res = await fetch("/api/dashboard/ticket-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "บันทึกข้อมูลล้มเหลว");
+      }
+
+      // Clear the typed key from local form state
+      if (config.ai_config.api_key) {
+        setConfig((prev) => ({
+          ...prev,
+          ai_config: {
+            ...prev.ai_config,
+            api_key: "",
+            has_api_key: true,
+          },
+        }));
+      }
 
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 4000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save config error:", error);
+      alert(error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 4000);
     } finally {
@@ -512,21 +507,28 @@ export default function DashboardTicketPage() {
         .map(t => t.trim().toLowerCase())
         .filter(Boolean);
 
-      const kbCol = collection(ticketDb, "guilds", config.guild_id, "knowledge_base");
-      await addDoc(kbCol, {
-        title: newKbTitle.trim(),
-        category: "general",
-        content: newKbContent.trim(),
-        image_url: newKbImageUrl.trim() || null,
-        tags: tagsArray,
-        created_by: profile?.username || "Web Admin",
-        created_at: serverTimestamp(),
+      const res = await fetch("/api/dashboard/ticket-knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guild_id: config.guild_id,
+          title: newKbTitle.trim(),
+          content: newKbContent.trim(),
+          image_url: newKbImageUrl.trim() || null,
+          tags: tagsArray,
+        }),
       });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "เพิ่มบทความล้มเหลว");
+      }
 
       setNewKbTitle("");
       setNewKbContent("");
       setNewKbImageUrl("");
       setNewKbTags("");
+      await fetchKnowledgeBase(config.guild_id);
       alert("✅ เพิ่มบทความลงคลังความรู้สำเร็จ!");
     } catch (err: any) {
       console.error("Add KB error:", err);
@@ -536,7 +538,7 @@ export default function DashboardTicketPage() {
     }
   };
 
-  // Delete Knowledge Base Article
+  // Delete Knowledge Base Article via Server API Route
   const handleDeleteKb = async (articleId: string, title: string) => {
     if (!profile) {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อน");
@@ -545,11 +547,19 @@ export default function DashboardTicketPage() {
     if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบทความ "${title}"?`)) return;
 
     try {
-      const docRef = doc(ticketDb, "guilds", config.guild_id, "knowledge_base", articleId);
-      await deleteDoc(docRef);
+      const res = await fetch(`/api/dashboard/ticket-knowledge?guild_id=${config.guild_id}&article_id=${articleId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "ลบบทความล้มเหลว");
+      }
+
+      await fetchKnowledgeBase(config.guild_id);
     } catch (err: any) {
       console.error("Delete KB error:", err);
-  alert("ลบล้มเหลว: " + err.message);
+      alert("ลบล้มเหลว: " + err.message);
     }
   };
 
@@ -1262,14 +1272,18 @@ export default function DashboardTicketPage() {
                         return;
                       }
                       await handleSave();
-                      const docRef = doc(ticketDb, "guilds", config.guild_id);
-                      await setDoc(docRef, {
-                        ticket_config: {
-                          ...config.ticket_config,
+                      const res = await fetch("/api/dashboard/ticket-config", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          guild_id: config.guild_id,
                           sync_panel_channel_id: channelId,
-                          sync_panel_trigger: Date.now(),
-                        }
-                      }, { merge: true });
+                        }),
+                      });
+                      if (!res.ok) {
+                        const errJson = await res.json().catch(() => ({}));
+                        throw new Error(errJson.error || "ส่งคำสั่งซิงค์ล้มเหลว");
+                      }
                       alert("🚀 ส่งคำสั่งอัปเดต Panel ไปยัง Discord เรียบร้อย! ตรวจสอบห้องใน Discord ได้ทันที");
                     }}
                     style={{

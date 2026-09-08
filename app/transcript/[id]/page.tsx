@@ -4,8 +4,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { doc, getDoc, deleteDoc } from "firebase/firestore";
-import { ticketDb } from "@/lib/firebaseTicket";
 
 
 interface MessageAuthor {
@@ -107,73 +105,51 @@ export default function TranscriptPage() {
       }
 
       try {
-        const docRef = doc(ticketDb, "transcripts", transcriptId);
-        const docSnap = await getDoc(docRef);
-
+        const authRes = await fetch(`/api/transcript/${transcriptId}/auth`);
         if (!isMounted) return;
 
-        if (!docSnap.exists()) {
+        if (authRes.status === 404) {
           setTranscript(null);
+          setError("ไม่พบประวัติการสนทนา รหัสนี้อาจไม่มีอยู่หรือถูกลบไปแล้ว");
           setLoading(false);
           setAuthChecked(true);
           return;
         }
 
-        const data = docSnap.data() as TranscriptData;
-        const now = Date.now();
-        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+        const data = await authRes.json();
 
-        // ตรวจสอบเงื่อนไขหมดอายุ (เกิน 30 วันนับจากวันที่สร้าง)
-        const expired = (data.expiresAtMs && now > data.expiresAtMs) ||
-          (data.createdAtMs && now - data.createdAtMs > thirtyDaysMs);
-
-        if (expired) {
-          await deleteDoc(docRef).catch(() => {});
-          if (isMounted) {
-            setIsExpired(true);
-            setLoading(false);
-            setAuthChecked(true);
-          }
+        if (data.expired) {
+          setIsExpired(true);
+          setLoading(false);
+          setAuthChecked(true);
           return;
         }
 
-        const targetExpiry = data.expiresAtMs || (data.createdAtMs ? data.createdAtMs + thirtyDaysMs : now + thirtyDaysMs);
-        const diff = targetExpiry - now;
-        const days = Math.max(1, Math.ceil(diff / (24 * 60 * 60 * 1000)));
-
-        if (isMounted) {
-          setRemainingDays(days);
-          setTranscript(data);
+        if (!data.authenticated) {
+          setAuthenticated(false);
+          setAuthorized(false);
+          setLoading(false);
+          setAuthChecked(true);
+          return;
         }
 
-        // ตรวจสอบสิทธิ์ Discord Login & ผู้เปิดตั๋ว / แอดมินเซิร์ฟเวอร์
-        try {
-          const authRes = await fetch(`/api/transcript/${transcriptId}/auth`);
-          if (authRes.ok) {
-            const authData = await authRes.json();
-            if (isMounted) {
-              setAuthenticated(!!authData.authenticated);
-              setAuthorized(!!authData.authorized);
-              setAuthRole(authData.role || null);
-              setUserProfile(authData.profile || null);
-            }
-          } else {
-            if (isMounted) {
-              setAuthenticated(false);
-              setAuthorized(false);
-            }
-          }
-        } catch {
-          if (isMounted) {
-            setAuthenticated(false);
-            setAuthorized(false);
-          }
-        } finally {
-          if (isMounted) {
-            setAuthChecked(true);
-            setLoading(false);
-          }
+        setUserProfile(data.profile || null);
+        setAuthenticated(true);
+
+        if (!data.authorized) {
+          setAuthorized(false);
+          setLoading(false);
+          setAuthChecked(true);
+          return;
         }
+
+        // ผู้ใช้ผ่านการยืนยันสิทธิ์เรียบร้อย (Authorized: author หรือ admin)
+        setAuthorized(true);
+        setAuthRole(data.role || null);
+        setTranscript(data.transcript || null);
+        setRemainingDays(data.remainingDays || 30);
+        setLoading(false);
+        setAuthChecked(true);
       } catch (err: unknown) {
         console.error("Fetch transcript error:", err);
         if (isMounted) {

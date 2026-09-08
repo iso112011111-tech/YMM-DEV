@@ -45,15 +45,27 @@ export async function GET(request: Request) {
     : (process.env.DISCORD_BOT_TOKEN || ROLE_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
 
   try {
-    const userManageableGuilds = profile.guilds || [];
-    const userManageableGuildIds = new Set(userManageableGuilds.map((g) => g.id));
+    // 2. Fetch all guilds the bot is currently in
+    const guildsRes = await fetchWithToken("https://discord.com/api/v10/users/@me/guilds", activeToken);
 
-    // 2. If guildId is provided, enforce that the logged in user actually has permission to manage that guild
+    if (!guildsRes.ok) {
+      const errText = await guildsRes.text();
+      return NextResponse.json({ 
+        guilds: [], 
+        error: `Discord ${guildsRes.status}: ${errText}`
+      }, { status: 200 });
+    }
+
+    const rawBotGuilds = await guildsRes.json();
+    const botGuilds = Array.isArray(rawBotGuilds) ? rawBotGuilds : [];
+
+    // If guildId is provided, fetch channels, categories, and roles for that server
     if (guildId) {
-      if (userManageableGuildIds.size > 0 && !userManageableGuildIds.has(guildId)) {
+      const isBotInGuild = botGuilds.some((bg: { id: string }) => bg.id === guildId);
+      if (!isBotInGuild) {
         return NextResponse.json(
-          { error: "Forbidden: คุณไม่มีสิทธิ์เข้าถึงหรือจัดการเซิร์ฟเวอร์นี้" },
-          { status: 403 }
+          { error: "บอทยังไม่ได้เข้าร่วมเซิร์ฟเวอร์นี้ กรุณาเชิญบอทก่อน" },
+          { status: 404 }
         );
       }
 
@@ -99,31 +111,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ channels, categories, roles });
     }
 
-    // 3. Otherwise, fetch all guilds the bot is currently in
-    const guildsRes = await fetchWithToken("https://discord.com/api/v10/users/@me/guilds", activeToken);
-
-    if (!guildsRes.ok) {
-      const errText = await guildsRes.text();
-      return NextResponse.json({ 
-        guilds: [], 
-        error: `Discord ${guildsRes.status}: ${errText}`
-      }, { status: 200 });
-    }
-
-    const rawBotGuilds = await guildsRes.json();
-    const botGuilds = Array.isArray(rawBotGuilds) ? rawBotGuilds : [];
-
-    // STRICT ISOLATION: Intersect bot guilds with user's manageable guilds
-    // The user ONLY sees servers where:
-    // (1) User is Owner or has Administrator / Manage Server permission
-    // (2) AND the bot is currently in that server
-    let accessibleGuilds = botGuilds;
-    if (userManageableGuildIds.size > 0) {
-      accessibleGuilds = botGuilds.filter((bg: { id: string }) => userManageableGuildIds.has(bg.id));
-    }
-
+    // Return the servers where the bot is installed
     return NextResponse.json({
-      guilds: accessibleGuilds.map((g: { id: string; name: string; icon: string | null }) => ({
+      guilds: botGuilds.map((g: { id: string; name: string; icon: string | null }) => ({
         id: g.id,
         name: g.name,
         icon: g.icon

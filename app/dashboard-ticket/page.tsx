@@ -214,7 +214,7 @@ export default function DashboardTicketPage() {
         if (data.guilds && data.guilds.length > 0) {
           setBotGuilds(data.guilds);
           setConfig((prev) => {
-            if (!prev.guild_id) {
+            if (!prev.guild_id || !data.guilds!.some((g) => g.id === prev.guild_id)) {
               const firstGuild = data.guilds![0];
               return {
                 ...prev,
@@ -347,11 +347,6 @@ export default function DashboardTicketPage() {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
       return;
     }
-    const userCanManage = (profile.guilds || []).some((g) => g.id === config.guild_id);
-    if (profile.guilds && profile.guilds.length > 0 && !userCanManage) {
-      alert("คุณไม่มีสิทธิ์เป็นผู้ดูแลในเซิร์ฟเวอร์นี้ ไม่สามารถบันทึกการตั้งค่าได้");
-      return;
-    }
     if (!hasBotInCurrentServer) {
       alert("ไม่สามารถบันทึกได้ เนื่องจากเซิร์ฟเวอร์นี้ยังไม่ได้ติดตั้งบอท YMM-TICKET");
       return;
@@ -451,11 +446,6 @@ export default function DashboardTicketPage() {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนเพิ่มบทความ");
       return;
     }
-    const userCanManage = (profile.guilds || []).some((g) => g.id === config.guild_id);
-    if (profile.guilds && profile.guilds.length > 0 && !userCanManage) {
-      alert("คุณไม่มีสิทธิ์จัดการข้อมูลของเซิร์ฟเวอร์นี้");
-      return;
-    }
     if (!newKbTitle.trim() || !newKbContent.trim()) {
       alert("กรุณากรอกหัวข้อและเนื้อหาของบทความ");
       return;
@@ -496,11 +486,6 @@ export default function DashboardTicketPage() {
   const handleDeleteKb = async (articleId: string, title: string) => {
     if (!profile) {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อน");
-      return;
-    }
-    const userCanManage = (profile.guilds || []).some((g) => g.id === config.guild_id);
-    if (profile.guilds && profile.guilds.length > 0 && !userCanManage) {
-      alert("คุณไม่มีสิทธิ์จัดการข้อมูลของเซิร์ฟเวอร์นี้");
       return;
     }
     if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบทความ "${title}"?`)) return;

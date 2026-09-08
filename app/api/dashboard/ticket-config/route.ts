@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTicketAdminDb, verifyGuildAdmin, encryptApiKey } from "@/lib/serverFirestore";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, FieldPath } from "firebase-admin/firestore";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -25,6 +25,17 @@ export async function GET(request: Request) {
     }
 
     const data = docSnap.data() || {};
+
+    // Fold any legacy literal dot-keyed fields into nested maps for safety
+    for (const [key, val] of Object.entries(data)) {
+      if (key.includes(".")) {
+        const [parent, child] = key.split(".", 2);
+        if (!data[parent] || typeof data[parent] !== "object") data[parent] = {};
+        if (data[parent][child] === undefined) {
+          data[parent][child] = val;
+        }
+      }
+    }
 
     // Don't send back encrypted key, just indicate whether a key is configured
     if (data.ai_config) {
@@ -105,6 +116,14 @@ async function testGeminiApiKey(apiKey: string): Promise<{ valid: boolean; error
   }
 }
 
+function flattenToDotNotation(prefix: string, obj: Record<string, any>, target: Record<string, any>) {
+  if (!obj || typeof obj !== "object") return;
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) continue;
+    target[`${prefix}.${key}`] = value;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -129,34 +148,18 @@ export async function POST(request: Request) {
 
     if (body.guild_name) updates.guild_name = body.guild_name;
 
-    // 1. Embed Customization (Dot-notation to prevent replacing nested map)
-    if (body.embed_customization) {
-      const ec = body.embed_customization;
-      if (ec.panel_title !== undefined) updates["embed_customization.panel_title"] = ec.panel_title;
-      if (ec.panel_description !== undefined) updates["embed_customization.panel_description"] = ec.panel_description;
-      if (ec.panel_color !== undefined) updates["embed_customization.panel_color"] = ec.panel_color;
-      if (ec.welcome_message !== undefined) updates["embed_customization.welcome_message"] = ec.welcome_message;
-      if (ec.footer_text !== undefined) updates["embed_customization.footer_text"] = ec.footer_text;
-      if (ec.button_text !== undefined) updates["embed_customization.button_text"] = ec.button_text;
-      if (ec.button_style !== undefined) updates["embed_customization.button_style"] = ec.button_style;
-      if (ec.button_emoji !== undefined) updates["embed_customization.button_emoji"] = ec.button_emoji;
-      if (ec.button_color !== undefined) updates["embed_customization.button_color"] = ec.button_color;
-      if (Array.isArray(ec.categories)) updates["embed_customization.categories"] = ec.categories;
+    // 1. Embed Customization: Dynamic flatten to dot-notation
+    if (body.embed_customization && typeof body.embed_customization === "object") {
+      flattenToDotNotation("embed_customization", body.embed_customization, updates);
     }
 
-    // 2. Ticket Config (Dot-notation to preserve ticket_counter, etc.)
-    if (body.ticket_config) {
-      const tc = body.ticket_config;
-      if (tc.category_id !== undefined) updates["ticket_config.category_id"] = tc.category_id;
-      if (tc.log_channel_id !== undefined) updates["ticket_config.log_channel_id"] = tc.log_channel_id;
-      if (Array.isArray(tc.staff_role_ids)) updates["ticket_config.staff_role_ids"] = tc.staff_role_ids;
-      if (tc.supervisor_role_id !== undefined) updates["ticket_config.supervisor_role_id"] = tc.supervisor_role_id;
-      if (typeof tc.sla_minutes === "number") updates["ticket_config.sla_minutes"] = tc.sla_minutes;
-      if (typeof tc.auto_close_hours === "number") updates["ticket_config.auto_close_hours"] = tc.auto_close_hours;
+    // 2. Ticket Config: Dynamic flatten to dot-notation (preserves ticket_counter, etc.)
+    if (body.ticket_config && typeof body.ticket_config === "object") {
+      flattenToDotNotation("ticket_config", body.ticket_config, updates);
     }
 
-    // 3. AI Configuration (Dot-notation to never erase encrypted_api_key)
-    if (body.ai_config) {
+    // 3. AI Configuration: Explicit control for encryption & security (never flatten raw api_key)
+    if (body.ai_config && typeof body.ai_config === "object") {
       const ai = body.ai_config;
       if (ai.provider !== undefined) updates["ai_config.provider"] = ai.provider;
       if (ai.model !== undefined) updates["ai_config.model"] = ai.model;
@@ -192,7 +195,24 @@ export async function POST(request: Request) {
       updates["ticket_config.sync_panel_trigger"] = Date.now();
     }
 
-    await docRef.set(updates, { merge: true });
+    // Ensure document exists before update, and use update() for true dot-notation nesting in Firestore
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) {
+      await docRef.set({
+        guild_id: guildId,
+        created_at: FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Auto-cleanup any garbage literal dot keys created by earlier set({ merge: true })
+      const data = docSnap.data() || {};
+      for (const key of Object.keys(data)) {
+        if (key.includes(".")) {
+          updates[new FieldPath(key) as unknown as string] = FieldValue.delete();
+        }
+      }
+    }
+
+    await docRef.update(updates);
 
     return NextResponse.json({
       success: true,

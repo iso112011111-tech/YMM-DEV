@@ -13,6 +13,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase safely (avoid multiple initializations in Next.js)
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+const existingApps = getApps();
+const app = existingApps.find(a => a.name === "[DEFAULT]") || initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export default app;

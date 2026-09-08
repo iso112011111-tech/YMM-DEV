@@ -19,6 +19,11 @@ import {
   limit
 } from "firebase/firestore";
 
+export interface TicketCategoryField {
+  name: string;
+  value: string;
+}
+
 interface TicketEmbedConfig {
   panel_title: string;
   panel_description: string;
@@ -27,6 +32,7 @@ interface TicketEmbedConfig {
   footer_text: string;
   button_text?: string;
   button_style?: "primary" | "success" | "secondary" | "danger";
+  categories?: TicketCategoryField[];
 }
 
 interface TicketSystemConfig {
@@ -119,6 +125,10 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
     footer_text: "Powered by YMM-TICKET",
     button_text: "สร้าง Ticket ใหม่",
     button_style: "primary",
+    categories: [
+      { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
+      { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
+    ],
   },
   ticket_config: {
     category_id: "",
@@ -348,6 +358,10 @@ export default function DashboardTicketPage() {
           button_style: config.embed_customization.button_style || "primary",
           welcome_message: config.embed_customization.welcome_message || "สวัสดีครับ ทีมงานจะเข้ามาช่วยเหลือในไม่ช้า",
           footer_text: config.embed_customization.footer_text || "Powered by YMM-TICKET",
+          categories: config.embed_customization.categories || [
+            { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
+            { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
+          ],
         },
         ticket_config: config.ticket_config,
         ai_config: {
@@ -1086,6 +1100,142 @@ export default function DashboardTicketPage() {
                         <option value="danger">🔴 Danger (แดง)</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Category Fields Customization */}
+                  <div style={{ background: "#0f172a", border: "1px solid #334155", borderRadius: "8px", padding: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 600, color: "#fff" }}>
+                          🏷️ หมวดหมู่บริการใน Panel (Category Fields)
+                        </label>
+                        <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                          หัวข้อและคำอธิบายหมวดหมู่ที่จะแสดงในกล่อง Embed บน Discord (เช่น Technical Support, Billing ฯลฯ)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentCats = config.embed_customization.categories || [];
+                          if (currentCats.length >= 10) {
+                            alert("สามารถเพิ่มได้สูงสุด 10 หมวดหมู่");
+                            return;
+                          }
+                          setConfig((prev) => ({
+                            ...prev,
+                            embed_customization: {
+                              ...prev.embed_customization,
+                              categories: [...(prev.embed_customization.categories || []), { name: "", value: "" }]
+                            }
+                          }));
+                        }}
+                        style={{
+                          background: "#3b82f6",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "6px 12px",
+                          fontSize: "0.8rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                      >
+                        ➕ เพิ่มหมวดหมู่
+                      </button>
+                    </div>
+
+                    {(!config.embed_customization.categories || config.embed_customization.categories.length === 0) ? (
+                      <div style={{ textAlign: "center", padding: "16px", color: "#64748b", fontSize: "0.85rem", border: "1px dashed #334155", borderRadius: "6px" }}>
+                        ยังไม่มีหมวดหมู่ที่กำหนด (ระบบจะใช้ค่าเริ่มต้น) กด &quot;➕ เพิ่มหมวดหมู่&quot; เพื่อสร้างหมวดหมู่ใหม่
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {config.embed_customization.categories.map((cat, idx) => (
+                          <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ display: "block", fontSize: "0.72rem", color: "#94a3b8", marginBottom: "4px" }}>
+                                ชื่อหมวดหมู่ #{idx + 1} (Field Name)
+                              </span>
+                              <input
+                                type="text"
+                                value={cat.name}
+                                onChange={(e) => {
+                                  const newCats = [...(config.embed_customization.categories || [])];
+                                  newCats[idx] = { ...newCats[idx], name: e.target.value };
+                                  setConfig((prev) => ({
+                                    ...prev,
+                                    embed_customization: { ...prev.embed_customization, categories: newCats }
+                                  }));
+                                }}
+                                placeholder="เช่น 💻 Technical Support"
+                                style={{
+                                  width: "100%",
+                                  background: "#1e293b",
+                                  border: "1px solid #334155",
+                                  borderRadius: "6px",
+                                  padding: "8px 12px",
+                                  color: "#fff",
+                                  fontSize: "0.85rem"
+                                }}
+                              />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ display: "block", fontSize: "0.72rem", color: "#94a3b8", marginBottom: "4px" }}>
+                                รายละเอียด (Field Value)
+                              </span>
+                              <input
+                                type="text"
+                                value={cat.value}
+                                onChange={(e) => {
+                                  const newCats = [...(config.embed_customization.categories || [])];
+                                  newCats[idx] = { ...newCats[idx], value: e.target.value };
+                                  setConfig((prev) => ({
+                                    ...prev,
+                                    embed_customization: { ...prev.embed_customization, categories: newCats }
+                                  }));
+                                }}
+                                placeholder="เช่น ปัญหาทางเทคนิค หรือข้อสงสัยทั่วไป"
+                                style={{
+                                  width: "100%",
+                                  background: "#1e293b",
+                                  border: "1px solid #334155",
+                                  borderRadius: "6px",
+                                  padding: "8px 12px",
+                                  color: "#fff",
+                                  fontSize: "0.85rem"
+                                }}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCats = (config.embed_customization.categories || []).filter((_, i) => i !== idx);
+                                setConfig((prev) => ({
+                                  ...prev,
+                                  embed_customization: { ...prev.embed_customization, categories: newCats }
+                                }));
+                              }}
+                              style={{
+                                marginTop: "18px",
+                                background: "rgba(239, 68, 68, 0.15)",
+                                border: "1px solid rgba(239, 68, 68, 0.4)",
+                                color: "#f87171",
+                                borderRadius: "6px",
+                                padding: "8px 12px",
+                                cursor: "pointer",
+                                fontSize: "0.85rem"
+                              }}
+                              title="ลบหมวดหมู่นี้"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Real-time Discord Panel Sync Action */}
@@ -1957,14 +2107,20 @@ export default function DashboardTicketPage() {
                       {config.embed_customization.panel_description || "กดปุ่มด้านล่างเพื่อสร้าง Ticket ใหม่"}
                     </p>
 
-                    {/* Simulating categories fields */}
+                    {/* Categories fields */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "6px", marginBottom: "12px" }}>
-                      <div style={{ background: "#1e1f22", padding: "6px 8px", borderRadius: "4px", fontSize: "0.75rem", color: "#94a3b8" }}>
-                        💻 Technical Support — ปัญหาทางเทคนิค
-                      </div>
-                      <div style={{ background: "#1e1f22", padding: "6px 8px", borderRadius: "4px", fontSize: "0.75rem", color: "#94a3b8" }}>
-                        💳 Billing & Payment — ปัญหาการชำระเงิน
-                      </div>
+                      {(config.embed_customization.categories && config.embed_customization.categories.length > 0
+                        ? config.embed_customization.categories
+                        : [
+                            { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
+                            { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
+                          ]
+                      ).map((cat, idx) => (
+                        <div key={idx} style={{ background: "#1e1f22", padding: "6px 8px", borderRadius: "4px", fontSize: "0.75rem", color: "#94a3b8" }}>
+                          <span style={{ color: "#fff", fontWeight: 600 }}>{cat.name || "หัวข้อหมวดหมู่"}</span>
+                          {cat.value ? ` — ${cat.value}` : ""}
+                        </div>
+                      ))}
                     </div>
 
                     <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>

@@ -163,10 +163,7 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
     button_style: "primary",
     button_emoji: "🎫",
     button_color: "#5865F2",
-    categories: [
-      { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
-      { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
-    ],
+    categories: [],
   },
   ticket_config: {
     category_id: "",
@@ -209,7 +206,6 @@ export default function DashboardTicketPage() {
   // Knowledge Base State
   const [kbArticles, setKbArticles] = useState<KnowledgeArticle[]>([]);
   const [newKbTitle, setNewKbTitle] = useState("");
-  const [newKbCategory, setNewKbCategory] = useState("general");
   const [newKbContent, setNewKbContent] = useState("");
   const [newKbImageUrl, setNewKbImageUrl] = useState("");
   const [newKbTags, setNewKbTags] = useState("");
@@ -413,10 +409,7 @@ export default function DashboardTicketPage() {
           button_color: chosenButtonColor,
           welcome_message: config.embed_customization.welcome_message || "สวัสดีครับ ทีมงานจะเข้ามาช่วยเหลือในไม่ช้า",
           footer_text: config.embed_customization.footer_text || "Powered by YMM-TICKET",
-          categories: config.embed_customization.categories || [
-            { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
-            { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
-          ],
+          categories: config.embed_customization.categories || [],
         },
         ticket_config: config.ticket_config,
         ai_config: {
@@ -504,7 +497,7 @@ export default function DashboardTicketPage() {
       const kbCol = collection(ticketDb, "guilds", config.guild_id, "knowledge_base");
       await addDoc(kbCol, {
         title: newKbTitle.trim(),
-        category: newKbCategory.trim(),
+        category: "general",
         content: newKbContent.trim(),
         image_url: newKbImageUrl.trim() || null,
         tags: tagsArray,
@@ -1401,7 +1394,7 @@ export default function DashboardTicketPage() {
 
                     {(!config.embed_customization.categories || config.embed_customization.categories.length === 0) ? (
                       <div style={{ textAlign: "center", padding: "16px", color: "#64748b", fontSize: "0.85rem", border: "1px dashed #334155", borderRadius: "6px" }}>
-                        ยังไม่มีหมวดหมู่ที่กำหนด (ระบบจะใช้ค่าเริ่มต้น) กด &quot;➕ เพิ่มหมวดหมู่&quot; เพื่อสร้างหมวดหมู่ใหม่
+                        ไม่มีหมวดหมู่ (Embed จะไม่แสดงฟิลด์หมวดหมู่) หรือกด &quot;➕ เพิ่มหมวดหมู่&quot; หากต้องการเพิ่มหัวข้อใน Embed
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1948,49 +1941,26 @@ export default function DashboardTicketPage() {
                   >
                     <b style={{ fontSize: "0.95rem", color: "#818cf8" }}>➕ เพิ่มบทความ / FAQ ใหม่</b>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px" }}>
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px" }}>
-                          หัวข้อปัญหา / คำถาม:
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newKbTitle}
-                          onChange={(e) => setNewKbTitle(e.target.value)}
-                          placeholder="เช่น วิธีขอเงินคืน, ขั้นตอนเติมเงิน"
-                          style={{
-                            width: "100%",
-                            background: "#1e293b",
-                            border: "1px solid #334155",
-                            borderRadius: "6px",
-                            padding: "8px 12px",
-                            color: "#fff",
-                            fontSize: "0.85rem"
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px" }}>
-                          หมวดหมู่:
-                        </label>
-                        <input
-                          type="text"
-                          value={newKbCategory}
-                          onChange={(e) => setNewKbCategory(e.target.value)}
-                          placeholder="billing / tech / ทั่วไป"
-                          style={{
-                            width: "100%",
-                            background: "#1e293b",
-                            border: "1px solid #334155",
-                            borderRadius: "6px",
-                            padding: "8px 12px",
-                            color: "#fff",
-                            fontSize: "0.85rem"
-                          }}
-                        />
-                      </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px" }}>
+                        หัวข้อปัญหา / คำถาม:
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newKbTitle}
+                        onChange={(e) => setNewKbTitle(e.target.value)}
+                        placeholder="เช่น วิธีขอเงินคืน, ขั้นตอนเติมเงิน"
+                        style={{
+                          width: "100%",
+                          background: "#1e293b",
+                          border: "1px solid #334155",
+                          borderRadius: "6px",
+                          padding: "8px 12px",
+                          color: "#fff",
+                          fontSize: "0.85rem"
+                        }}
+                      />
                     </div>
 
                     <div>
@@ -2187,16 +2157,6 @@ export default function DashboardTicketPage() {
                           >
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                                <span style={{
-                                  background: "#334155",
-                                  color: "#94a3b8",
-                                  fontSize: "0.7rem",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  fontWeight: 600
-                                }}>
-                                  {art.category}
-                                </span>
                                 <b style={{ fontSize: "0.95rem", color: "#fff" }}>{art.title}</b>
                               </div>
                               <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "6px 0" }}>
@@ -2359,21 +2319,17 @@ export default function DashboardTicketPage() {
                       {config.embed_customization.panel_description || "กดปุ่มด้านล่างเพื่อสร้าง Ticket ใหม่"}
                     </p>
 
-                    {/* Categories fields */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "6px", marginBottom: "12px" }}>
-                      {(config.embed_customization.categories && config.embed_customization.categories.length > 0
-                        ? config.embed_customization.categories
-                        : [
-                            { name: "💻 Technical Support", value: "ปัญหาทางเทคนิค" },
-                            { name: "💳 Billing & Payment", value: "ปัญหาการชำระเงิน" },
-                          ]
-                      ).map((cat, idx) => (
-                        <div key={idx} style={{ background: "#1e1f22", padding: "6px 8px", borderRadius: "4px", fontSize: "0.75rem", color: "#94a3b8" }}>
-                          <span style={{ color: "#fff", fontWeight: 600 }}>{cat.name || "หัวข้อหมวดหมู่"}</span>
-                          {cat.value ? ` — ${cat.value}` : ""}
-                        </div>
-                      ))}
-                    </div>
+                    {/* Categories fields (if any) */}
+                    {config.embed_customization.categories && config.embed_customization.categories.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "6px", marginBottom: "12px" }}>
+                        {config.embed_customization.categories.map((cat, idx) => (
+                          <div key={idx} style={{ background: "#1e1f22", padding: "6px 8px", borderRadius: "4px", fontSize: "0.75rem", color: "#94a3b8" }}>
+                            <span style={{ color: "#fff", fontWeight: 600 }}>{cat.name || "หัวข้อหมวดหมู่"}</span>
+                            {cat.value ? ` — ${cat.value}` : ""}
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
                       {config.embed_customization.footer_text || "Powered by YMM-TICKET"}

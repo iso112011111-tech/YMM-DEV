@@ -122,14 +122,13 @@ export default function DashboardPage() {
   const [botGuilds, setBotGuilds] = useState<DiscordGuild[]>([]);
   const [channels, setChannels] = useState<DiscordChannel[]>([]);
   const [roles, setRoles] = useState<DiscordRole[]>([]);
-  const [isCustomServer, setIsCustomServer] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingGuilds, setLoadingGuilds] = useState(true);
 
   // Permission Checks
   const isLoggedIn = Boolean(profile);
   const hasBotInCurrentServer = (botGuilds || []).some((g) => g.id === config.guild_id);
-  const isAccessible = isLoggedIn && hasBotInCurrentServer;
+  const isAccessible = isLoggedIn && hasBotInCurrentServer && (botGuilds || []).length > 0;
 
   // 1. Fetch User Profile
   useEffect(() => {
@@ -161,6 +160,13 @@ export default function DashboardPage() {
             }
             return prev;
           });
+        } else {
+          setBotGuilds([]);
+          setConfig((prev) => ({
+            ...prev,
+            guild_id: "",
+            server_name: ""
+          }));
         }
       })
       .catch((err) => console.warn("Could not load bot guilds:", err))
@@ -217,8 +223,8 @@ export default function DashboardPage() {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
       return;
     }
-    if (!hasBotInCurrentServer) {
-      alert("ไม่สามารถบันทึกได้ เนื่องจากเซิร์ฟเวอร์นี้ยังไม่ได้ติดตั้งบอท YMM_ROLE");
+    if (botGuilds.length === 0 || !hasBotInCurrentServer) {
+      alert("ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ หรือยังไม่ได้ติดตั้งบอท YMM_ROLE");
       return;
     }
     setSaving(true);
@@ -364,23 +370,19 @@ export default function DashboardPage() {
           <div className="role-header-controls-row">
             {/* Live Server Selector Dropdown */}
             {profile && (
-              botGuilds.length > 0 && !isCustomServer ? (
+              botGuilds.length > 0 ? (
                 <div className="role-server-select-wrap">
                   <span className="role-server-label">Server:</span>
                   <select
                     value={config.guild_id}
                     onChange={(e) => {
                       const selectedVal = e.target.value;
-                      if (selectedVal === "custom") {
-                        setIsCustomServer(true);
-                      } else {
-                        const selected = botGuilds.find((g) => g.id === selectedVal);
-                        setConfig((prev) => ({
-                          ...prev,
-                          guild_id: selectedVal,
-                          server_name: selected ? selected.name : prev.server_name
-                        }));
-                      }
+                      const selected = botGuilds.find((g) => g.id === selectedVal);
+                      setConfig((prev) => ({
+                        ...prev,
+                        guild_id: selectedVal,
+                        server_name: selected ? selected.name : prev.server_name
+                      }));
                     }}
                     className="role-server-select"
                   >
@@ -389,30 +391,21 @@ export default function DashboardPage() {
                         {g.name}
                       </option>
                     ))}
-                    <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
-                      Custom Server ID...
-                    </option>
                   </select>
                 </div>
               ) : (
                 <div className="role-server-select-wrap">
-                  <span className="role-server-label">Server ID:</span>
-                  <input
-                    type="text"
-                    value={config.guild_id}
-                    onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
-                    className="role-server-input"
-                    placeholder="ID เซิร์ฟเวอร์..."
-                  />
-                  {botGuilds.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setIsCustomServer(false)}
-                      className="role-back-btn"
-                    >
-                      ย้อนกลับ
-                    </button>
-                  )}
+                  <span className="role-server-label">Server:</span>
+                  <select
+                    disabled
+                    value=""
+                    className="role-server-select"
+                    style={{ color: "#94a3b8", cursor: "not-allowed", opacity: 0.8 }}
+                  >
+                    <option value="" style={{ background: "#0c1322", color: "#94a3b8" }}>
+                      {loadingGuilds ? "กำลังโหลดเซิร์ฟเวอร์..." : "ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ"}
+                    </option>
+                  </select>
                 </div>
               )
             )}
@@ -515,11 +508,20 @@ export default function DashboardPage() {
               ) : (
                 <>
                   <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>
-                    ไม่พบบอทในเซิร์ฟเวอร์นี้
+                    {botGuilds.length === 0 ? "ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ" : "ไม่พบบอทในเซิร์ฟเวอร์นี้"}
                   </h2>
                   <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "24px" }}>
-                    เซิร์ฟเวอร์ที่คุณเลือกยังไม่ได้ติดตั้งบอท <b style={{ color: "#fff" }}>YMM_ROLE</b><br />
-                    กรุณาเชิญบอทเข้าสู่เซิร์ฟเวอร์ก่อน จึงจะสามารถตั้งค่าระบบรับยศและบันทึกข้อมูลได้ครับ
+                    {botGuilds.length === 0 ? (
+                      <>
+                        คุณต้องเป็นเจ้าของเซิร์ฟเวอร์ (Owner) หรือมีสิทธิ์ Administrator / Manage Server<br />
+                        และเซิร์ฟเวอร์นั้นต้องติดตั้งบอท <b style={{ color: "#fff" }}>YMM_ROLE</b> แล้วครับ
+                      </>
+                    ) : (
+                      <>
+                        เซิร์ฟเวอร์ที่คุณเลือกยังไม่ได้ติดตั้งบอท <b style={{ color: "#fff" }}>YMM_ROLE</b><br />
+                        กรุณาเชิญบอทเข้าสู่เซิร์ฟเวอร์ก่อน จึงจะสามารถตั้งค่าระบบรับยศและบันทึกข้อมูลได้ครับ
+                      </>
+                    )}
                   </p>
                   <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
                     <a

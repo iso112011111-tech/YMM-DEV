@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readSession, SESSION_COOKIE } from "@/lib/discordAuth";
+import { verifyGuildAdmin, verifyUserIsAdmin, checkUserAdminInSession } from "@/lib/serverFirestore";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -26,7 +27,7 @@ async function fetchWithToken(url: string, token: string) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const guildId = searchParams.get("guildId");
-  const botType = searchParams.get("bot"); // "ticket" or "role"
+  const botType = searchParams.get("bot") === "ticket" ? "ticket" : "role";
 
   const cookieHeader = request.headers.get("cookie") || "";
   const sessionCookie = cookieHeader
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
 
   const activeToken = botType === "ticket"
     ? TICKET_BOT_TOKEN
-    : (process.env.DISCORD_BOT_TOKEN || ROLE_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
+    : (process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_ROLE_BOT_TOKEN || ROLE_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
 
   try {
     // 2. Fetch all guilds the bot is currently in
@@ -61,6 +62,13 @@ export async function GET(request: Request) {
 
     // If guildId is provided, fetch channels, categories, and roles for that server
     if (guildId) {
+      // 1. Verify user is admin/owner of THIS guild
+      const auth = await verifyGuildAdmin(request, guildId, botType);
+      if (!auth.authorized) {
+        return NextResponse.json({ error: auth.error }, { status: auth.status || 403 });
+      }
+
+      // 2. Verify bot is in THIS guild
       const isBotInGuild = botGuilds.some((bg: { id: string }) => bg.id === guildId);
       if (!isBotInGuild) {
         return NextResponse.json(
@@ -111,16 +119,64 @@ export async function GET(request: Request) {
       return NextResponse.json({ channels, categories, roles });
     }
 
-    // Return the servers where the bot is installed
-    return NextResponse.json({
-      guilds: botGuilds.map((g: { id: string; name: string; icon: string | null }) => ({
-        id: g.id,
-        name: g.name,
-        icon: g.icon
-          ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`
-          : null
-      }))
-    });
+    // Return ONLY servers where:
+    // 1) The bot is in the server AND
+    // 2) The authenticated user is owner OR has ADMINISTRATOR (0x8) / MANAGE_GUILD (0x20)
+    const accessibleGuilds: Array<{ id: string; name: string; icon: string | null }> = [];
+    const botGuildMap = new Map(botGuilds.map((bg: { id: string; name: string; icon: string | null }) => [bg.id, bg]));
+    const checkedGuildIds = new Set<string>();
+
+    // 1. Process guilds present in the user's session cookie
+    for (const ug of profile.guilds || []) {
+      if (!botGuildMap.has(ug.id)) continue;
+      checkedGuildIds.add(ug.id);
+
+      if (checkUserAdminInSession(profile, ug.id)) {
+        const bg = botGuildMap.get(ug.id)!;
+        accessibleGuilds.push({
+          id: bg.id,
+          name: bg.name,
+          icon: bg.icon
+            ? `https://cdn.discordapp.com/icons/${bg.id}/${bg.icon}.png?size=64`
+            : null
+        });
+      } else {
+        // Fallback for old session cookies without permissions field: verify via Discord API
+        const isAdmin = await verifyUserIsAdmin(profile, ug.id, botType);
+        if (isAdmin) {
+          const bg = botGuildMap.get(ug.id)!;
+          accessibleGuilds.push({
+            id: bg.id,
+            name: bg.name,
+            icon: bg.icon
+              ? `https://cdn.discordapp.com/icons/${bg.id}/${bg.icon}.png?size=64`
+              : null
+          });
+        }
+      }
+    }
+
+    // 2. Fallback: If there are remaining bot guilds not in the user's session cookie (e.g. truncated),
+    // verify them in parallel up to 15 guilds to prevent hitting Discord rate limits
+    const uncheckedBotGuilds = botGuilds.filter((bg) => !checkedGuildIds.has(bg.id));
+    if (uncheckedBotGuilds.length > 0 && uncheckedBotGuilds.length <= 15) {
+      await Promise.all(
+        uncheckedBotGuilds.map(async (bg) => {
+          const isAdmin = await verifyUserIsAdmin(profile, bg.id, botType);
+          if (isAdmin) {
+            accessibleGuilds.push({
+              id: bg.id,
+              name: bg.name,
+              icon: bg.icon
+                ? `https://cdn.discordapp.com/icons/${bg.id}/${bg.icon}.png?size=64`
+                : null
+            });
+          }
+        })
+      );
+    }
+
+    return NextResponse.json({ guilds: accessibleGuilds });
   } catch (error) {
     console.error("Discord API fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch Discord data" }, { status: 500 });

@@ -99,12 +99,13 @@ export async function GET(request: Request) {
             return false;
           }
         })
-        .slice(0, 15) // Keep cookie payload lightweight
+        .slice(0, 25) // Keep cookie payload lightweight
         .map((g) => ({
           id: g.id,
           name: g.name,
           icon: g.icon,
           owner: g.owner,
+          permissions: g.permissions,
         }));
     }
   } catch (err) {

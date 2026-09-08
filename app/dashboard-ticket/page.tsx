@@ -221,10 +221,10 @@ export default function DashboardTicketPage() {
   const [roles, setRoles] = useState<DiscordRole[]>([]);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingGuilds, setLoadingGuilds] = useState(true);
-  const [isCustomServer, setIsCustomServer] = useState(false);
 
   const isLoggedIn = Boolean(profile);
-  const hasBotInCurrentServer = (botGuilds || []).some((g) => g.id === config.guild_id) || Boolean(config.guild_id && isCustomServer);
+  const hasBotInCurrentServer = (botGuilds || []).some((g) => g.id === config.guild_id);
+  const isAccessible = isLoggedIn && hasBotInCurrentServer && (botGuilds || []).length > 0;
 
   // 1. Fetch User Profile
   useEffect(() => {
@@ -255,6 +255,13 @@ export default function DashboardTicketPage() {
             }
             return prev;
           });
+        } else {
+          setBotGuilds([]);
+          setConfig((prev) => ({
+            ...prev,
+            guild_id: "",
+            guild_name: "",
+          }));
         }
       })
       .catch((err) => console.warn("Could not load ticket bot guilds:", err))
@@ -379,8 +386,8 @@ export default function DashboardTicketPage() {
       alert("กรุณาเข้าสู่ระบบ Discord ก่อนบันทึกการตั้งค่า");
       return;
     }
-    if (!hasBotInCurrentServer) {
-      alert("ไม่สามารถบันทึกได้ เนื่องจากเซิร์ฟเวอร์นี้ยังไม่ได้ติดตั้งบอท YMM-TICKET");
+    if (botGuilds.length === 0 || !hasBotInCurrentServer) {
+      alert("ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ หรือยังไม่ได้ติดตั้งบอท YMM-TICKET");
       return;
     }
 
@@ -623,7 +630,7 @@ export default function DashboardTicketPage() {
           {/* Controls: Server Selector, Profile, Save Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
             {/* Server Selector */}
-            {botGuilds.length > 0 && !isCustomServer ? (
+            {botGuilds.length > 0 ? (
               <div style={{
                 display: "flex",
                 alignItems: "center",
@@ -643,16 +650,12 @@ export default function DashboardTicketPage() {
                     setRoles([]);
                     setKbArticles([]);
                     setRecentTickets([]);
-                    if (selectedVal === "custom") {
-                      setIsCustomServer(true);
-                    } else {
-                      const selected = botGuilds.find((g) => g.id === selectedVal);
-                      setConfig({
-                        ...DEFAULT_CONFIG,
-                        guild_id: selectedVal,
-                        guild_name: selected ? selected.name : "Server",
-                      });
-                    }
+                    const selected = botGuilds.find((g) => g.id === selectedVal);
+                    setConfig({
+                      ...DEFAULT_CONFIG,
+                      guild_id: selectedVal,
+                      guild_name: selected ? selected.name : "Server",
+                    });
                   }}
                   style={{
                     background: "transparent",
@@ -670,9 +673,6 @@ export default function DashboardTicketPage() {
                       {g.name}
                     </option>
                   ))}
-                  <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
-                    + ระบุ Server ID เอง...
-                  </option>
                 </select>
               </div>
             ) : (
@@ -685,38 +685,25 @@ export default function DashboardTicketPage() {
                 borderRadius: "8px",
                 border: "1px solid rgba(255, 255, 255, 0.08)"
               }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Server ID:</span>
-                <input
-                  type="text"
-                  value={config.guild_id}
-                  onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
+                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>เซิร์ฟเวอร์:</span>
+                <select
+                  disabled
+                  value=""
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: "#fff",
+                    color: "#94a3b8",
                     fontSize: "0.82rem",
                     fontWeight: 600,
-                    width: "130px",
-                    outline: "none"
+                    outline: "none",
+                    cursor: "not-allowed",
+                    maxWidth: "240px"
                   }}
-                  placeholder="ID เซิร์ฟเวอร์..."
-                />
-                {botGuilds.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsCustomServer(false)}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      color: "#94a3b8",
-                      fontSize: "0.72rem",
-                      cursor: "pointer",
-                      textDecoration: "underline"
-                    }}
-                  >
-                    ย้อนกลับ
-                  </button>
-                )}
+                >
+                  <option value="" style={{ background: "#0c1322", color: "#94a3b8" }}>
+                    {loadingGuilds ? "กำลังโหลดเซิร์ฟเวอร์..." : "ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ"}
+                  </option>
+                </select>
               </div>
             )}
 
@@ -787,24 +774,26 @@ export default function DashboardTicketPage() {
             {/* Save Button */}
             <button
               onClick={handleSave}
-              disabled={saving || apiKeyStatus === "validating" || !hasBotInCurrentServer}
+              disabled={saving || apiKeyStatus === "validating" || !hasBotInCurrentServer || botGuilds.length === 0}
               style={{
                 background: (saving || apiKeyStatus === "validating") 
                   ? "#475569" 
                   : saveStatus === "success" 
                     ? "#10b981" 
-                    : "#3b82f6",
+                    : (!hasBotInCurrentServer || botGuilds.length === 0)
+                      ? "#475569"
+                      : "#3b82f6",
                 color: "#fff",
                 border: "none",
                 padding: "7px 16px",
                 borderRadius: "8px",
                 fontWeight: 600,
                 fontSize: "0.85rem",
-                cursor: (saving || apiKeyStatus === "validating" || !hasBotInCurrentServer) ? "not-allowed" : "pointer",
+                cursor: (saving || apiKeyStatus === "validating" || !hasBotInCurrentServer || botGuilds.length === 0) ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                boxShadow: "0 2px 8px rgba(59, 130, 246, 0.25)",
+                boxShadow: (saving || !hasBotInCurrentServer || botGuilds.length === 0) ? "none" : "0 2px 8px rgba(59, 130, 246, 0.25)",
                 transition: "all 0.15s ease",
                 whiteSpace: "nowrap"
               }}
@@ -823,8 +812,8 @@ export default function DashboardTicketPage() {
 
       {/* Main Container */}
       <main className="dash-main">
-        {/* Status Notice Banner if Bot not in server */}
-        {!loadingGuilds && !hasBotInCurrentServer && (
+        {/* Status Notice Banner if Bot not in server or no manageable server */}
+        {!loadingGuilds && (botGuilds.length === 0 || !hasBotInCurrentServer) && (
           <div style={{
             background: "rgba(239, 68, 68, 0.08)",
             border: "1px solid rgba(239, 68, 68, 0.25)",
@@ -838,9 +827,15 @@ export default function DashboardTicketPage() {
             gap: "12px"
           }}>
             <div>
-              <b style={{ color: "#ef4444", fontSize: "0.9rem" }}>⚠️ บอท YMM-TICKET ยังไม่ได้อยู่ในเซิร์ฟเวอร์นี้</b>
+              <b style={{ color: "#ef4444", fontSize: "0.9rem" }}>
+                {botGuilds.length === 0
+                  ? "⚠️ ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ"
+                  : "⚠️ บอท YMM-TICKET ยังไม่ได้อยู่ในเซิร์ฟเวอร์นี้"}
+              </b>
               <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: "2px 0 0" }}>
-                กรุณาเชิญบอทเข้าเซิร์ฟเวอร์ก่อน จึงจะสามารถเปิดใช้งานและบันทึกการตั้งค่าได้
+                {botGuilds.length === 0
+                  ? "คุณต้องเป็นเจ้าของเซิร์ฟเวอร์ (Owner) หรือมีสิทธิ์ Administrator / Manage Server และเซิร์ฟเวอร์นั้นต้องติดตั้งบอทแล้ว"
+                  : "กรุณาเชิญบอทเข้าเซิร์ฟเวอร์ก่อน จึงจะสามารถเปิดใช้งานและบันทึกการตั้งค่าได้"}
               </p>
             </div>
             <a
@@ -864,6 +859,19 @@ export default function DashboardTicketPage() {
             </a>
           </div>
         )}
+
+        {/* Configuration Form Controls (Disabled if no server permissions) */}
+        <fieldset
+          disabled={!isAccessible}
+          style={{
+            border: "none",
+            padding: 0,
+            margin: 0,
+            opacity: (!loadingGuilds && !isAccessible) ? 0.45 : 1,
+            pointerEvents: (!loadingGuilds && !isAccessible) ? "none" : "auto",
+            transition: "opacity 0.2s ease"
+          }}
+        >
 
         {/* Quota & Stats Overview Cards (Responsive 4-col desktop, 2-col mobile) */}
         <div className="dash-stats-grid">
@@ -2376,6 +2384,7 @@ export default function DashboardTicketPage() {
             )}
           </div>
         )}
+        </fieldset>
       </main>
     </div>
   );

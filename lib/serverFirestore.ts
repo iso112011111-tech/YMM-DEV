@@ -109,44 +109,33 @@ export function getRoleAdminDb(): Firestore {
 // 2. Authorization & Bitmask Verification
 // -------------------------------------------------------------
 
-export async function verifyGuildAdmin(
-  request: Request,
+export function checkUserAdminInSession(profile: DiscordProfile, guildId: string): boolean {
+  if (!guildId || !profile.guilds) return false;
+  const g = profile.guilds.find((item) => item.id === guildId);
+  if (!g) return false;
+  if (g.owner) return true;
+  if (g.permissions) {
+    try {
+      const perm = BigInt(g.permissions);
+      return (perm & BigInt(0x8)) !== BigInt(0) || (perm & BigInt(0x20)) !== BigInt(0);
+    } catch {
+      return false;
+    }
+  }
+  // หากไม่มี permissions field ชัดเจน (เช่น cookie เก่า) ไม่อนุญาต ให้ตกไปตรวจสอบผ่าน Discord API แบบ Realtime แทน
+  return false;
+}
+
+export async function verifyUserIsAdmin(
+  profile: DiscordProfile,
   guildId: string,
   botType: "ticket" | "role" = "ticket"
-): Promise<{ authorized: boolean; profile?: DiscordProfile; error?: string; status?: number }> {
-  if (!guildId) {
-    return { authorized: false, error: "Missing guild ID", status: 400 };
-  }
+): Promise<boolean> {
+  if (!profile || !guildId) return false;
 
-  const cookieHeader = request.headers.get("cookie") || "";
-  const sessionCookie = cookieHeader
-    .split(";")
-    .map((c) => c.trim().split("="))
-    .find(([name]) => name === SESSION_COOKIE)?.[1];
-
-  const profile = readSession(sessionCookie);
-  if (!profile) {
-    return { authorized: false, error: "Unauthorized: กรุณาเข้าสู่ระบบ Discord", status: 401 };
-  }
-
-  // 1. ตรวจสอบจาก Session Cookie (0x8 = ADMINISTRATOR, 0x20 = MANAGE_GUILD)
-  const isGuildAdminInCookie = profile.guilds?.some((g: any) => {
-    if (g.id !== guildId) return false;
-    if (g.owner) return true;
-    if (g.permissions) {
-      try {
-        const perm = BigInt(g.permissions);
-        return (perm & BigInt(0x8)) !== BigInt(0) || (perm & BigInt(0x20)) !== BigInt(0);
-      } catch {
-        return false;
-      }
-    }
-    // หากไม่มี permissions field ชัดเจน ไม่อนุญาต ให้ส่งไปตรวจสอบผ่าน Discord API แบบ Realtime แทน
-    return false;
-  });
-
-  if (isGuildAdminInCookie) {
-    return { authorized: true, profile };
+  // 1. ตรวจสอบจาก Session Cookie ก่อนเสมอ (Fast path: 0x8 = ADMINISTRATOR, 0x20 = MANAGE_GUILD)
+  if (checkUserAdminInSession(profile, guildId)) {
+    return true;
   }
 
   // 2. Fallback ตรวจสอบผ่าน Discord API แบบ Realtime หากมี Bot Token
@@ -155,6 +144,7 @@ export async function verifyGuildAdmin(
       ? (process.env.DISCORD_ROLE_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
       : (process.env.DISCORD_TICKET_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
   ).replace(/['"]/g, "").trim();
+
   if (token) {
     try {
       const guildRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
@@ -164,7 +154,7 @@ export async function verifyGuildAdmin(
       if (guildRes.ok) {
         const guildData = await guildRes.json();
         if (guildData.owner_id === profile.id) {
-          return { authorized: true, profile };
+          return true;
         }
       }
 
@@ -189,7 +179,7 @@ export async function verifyGuildAdmin(
             try {
               const perm = BigInt(role.permissions);
               if ((perm & BigInt(0x8)) !== BigInt(0) || (perm & BigInt(0x20)) !== BigInt(0)) {
-                return { authorized: true, profile };
+                return true;
               }
             } catch {
               // ignore parse error
@@ -200,6 +190,34 @@ export async function verifyGuildAdmin(
     } catch (err) {
       console.warn("Realtime Discord API check notice:", err);
     }
+  }
+
+  return false;
+}
+
+export async function verifyGuildAdmin(
+  request: Request,
+  guildId: string,
+  botType: "ticket" | "role" = "ticket"
+): Promise<{ authorized: boolean; profile?: DiscordProfile; error?: string; status?: number }> {
+  if (!guildId) {
+    return { authorized: false, error: "Missing guild ID", status: 400 };
+  }
+
+  const cookieHeader = request.headers.get("cookie") || "";
+  const sessionCookie = cookieHeader
+    .split(";")
+    .map((c) => c.trim().split("="))
+    .find(([name]) => name === SESSION_COOKIE)?.[1];
+
+  const profile = readSession(sessionCookie);
+  if (!profile) {
+    return { authorized: false, error: "Unauthorized: กรุณาเข้าสู่ระบบ Discord", status: 401 };
+  }
+
+  const authorized = await verifyUserIsAdmin(profile, guildId, botType);
+  if (authorized) {
+    return { authorized: true, profile };
   }
 
   return {

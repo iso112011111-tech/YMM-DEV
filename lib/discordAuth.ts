@@ -8,6 +8,7 @@ export interface DiscordGuild {
   name: string;
   icon: string | null;
   owner?: boolean;
+  permissions?: string;
 }
 
 export interface DiscordProfile {

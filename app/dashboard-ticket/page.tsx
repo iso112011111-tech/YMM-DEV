@@ -340,17 +340,27 @@ export default function DashboardTicketPage() {
       const updates: any = {
         guild_id: config.guild_id,
         guild_name: activeServerName,
-        embed_customization: config.embed_customization,
+        embed_customization: {
+          panel_title: config.embed_customization.panel_title || "🎫 ระบบ Support Ticket",
+          panel_description: config.embed_customization.panel_description || "กดปุ่มด้านล่างเพื่อสร้าง Ticket ใหม่",
+          panel_color: config.embed_customization.panel_color || "#5865F2",
+          button_text: config.embed_customization.button_text || "สร้าง Ticket ใหม่",
+          button_style: config.embed_customization.button_style || "primary",
+          welcome_message: config.embed_customization.welcome_message || "สวัสดีครับ ทีมงานจะเข้ามาช่วยเหลือในไม่ช้า",
+          footer_text: config.embed_customization.footer_text || "Powered by YMM-TICKET",
+        },
         ticket_config: config.ticket_config,
-        'ai_config.provider': config.ai_config.provider,
-        'ai_config.model': config.ai_config.model,
-        'ai_config.is_active': config.ai_config.is_active,
+        ai_config: {
+          provider: config.ai_config.provider || "gemini",
+          model: config.ai_config.model || "gemini-3.6-flash",
+          is_active: Boolean(config.ai_config.is_active),
+        },
         updated_at: serverTimestamp(),
       };
 
       // If user typed a new API Key in web form
       if (config.ai_config.api_key && config.ai_config.api_key.trim()) {
-        updates['ai_config.raw_api_key_web'] = config.ai_config.api_key.trim();
+        updates.ai_config.raw_api_key_web = config.ai_config.api_key.trim();
       }
 
       await setDoc(docRef, updates, { merge: true });
@@ -1075,6 +1085,83 @@ export default function DashboardTicketPage() {
                         <option value="secondary">⚪ Secondary (เทา)</option>
                         <option value="danger">🔴 Danger (แดง)</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Real-time Discord Panel Sync Action */}
+                  <div style={{
+                    marginTop: "10px",
+                    padding: "16px 20px",
+                    background: "rgba(88, 101, 242, 0.08)",
+                    border: "1px solid rgba(88, 101, 242, 0.3)",
+                    borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "12px"
+                  }}>
+                    <div>
+                      <b style={{ color: "#fff", fontSize: "0.95rem" }}>🚀 ซิงค์สี & ข้อความ Panel ไปยัง Discord ทันที</b>
+                      <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: "2px 0 0" }}>
+                        บอทจะอัปเดตสีและข้อความของ Embed บน Discord ทันที หรือส่งข้อความ Panel เข้าห้องที่เลือก
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <select
+                        id="panel-target-channel"
+                        defaultValue={config.ticket_config.log_channel_id || channels[0]?.id || ""}
+                        style={{
+                          background: "#0f172a",
+                          border: "1px solid #334155",
+                          borderRadius: "6px",
+                          padding: "8px 12px",
+                          color: "#fff",
+                          fontSize: "0.85rem"
+                        }}
+                      >
+                        {channels.length === 0 ? (
+                          <option value="">-- ไม่พบห้องข้อความ --</option>
+                        ) : (
+                          channels.map(c => (
+                            <option key={c.id} value={c.id}>#{c.name}</option>
+                          ))
+                        )}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const selectEl = document.getElementById("panel-target-channel") as HTMLSelectElement;
+                          const channelId = selectEl?.value || config.ticket_config.log_channel_id || channels[0]?.id;
+                          if (!channelId) {
+                            alert("กรุณาเลือกห้องข้อความก่อนครับ");
+                            return;
+                          }
+                          await handleSave();
+                          const docRef = doc(ticketDb, "guilds", config.guild_id);
+                          await setDoc(docRef, {
+                            ticket_config: {
+                              ...config.ticket_config,
+                              sync_panel_channel_id: channelId,
+                              sync_panel_trigger: Date.now(),
+                            }
+                          }, { merge: true });
+                          alert("🚀 ส่งคำสั่งอัปเดต Panel ไปยัง Discord เรียบร้อย! ตรวจสอบห้องใน Discord ได้ทันที");
+                        }}
+                        style={{
+                          background: "linear-gradient(135deg, #5865F2, #4752C4)",
+                          color: "#fff",
+                          border: "none",
+                          padding: "8px 16px",
+                          borderRadius: "6px",
+                          fontWeight: 700,
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          boxShadow: "0 2px 8px rgba(88, 101, 242, 0.4)"
+                        }}
+                      >
+                        ⚡ ซิงค์เข้า Discord
+                      </button>
                     </div>
                   </div>
                 </div>

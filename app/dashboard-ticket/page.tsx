@@ -143,6 +143,13 @@ function colorToDiscordStyle(hexColor?: string): "primary" | "success" | "second
   return "primary";
 }
 
+function getDiscordButtonColor(style?: string): string {
+  if (style === "success") return "#248046";
+  if (style === "danger") return "#da373c";
+  if (style === "secondary") return "#4e5058";
+  return "#5865F2";
+}
+
 const DEFAULT_CONFIG: FullTicketGuildConfig = {
   guild_id: "",
   guild_name: "YMM DEV",
@@ -1202,135 +1209,148 @@ export default function DashboardTicketPage() {
                       </div>
                     </div>
 
-                    {/* Color Presets & Custom Color Picker */}
+                    {/* Discord Native Button Style Cards */}
                     <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", padding: "14px", marginBottom: "16px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1" }}>
-                            🎨 สีปุ่มที่ต้องการ (กำหนดสีเองได้อิสระ):
-                          </label>
-                          <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-                            คลิกที่แถบสีเพื่อเปิด Color Picker หรือพิมพ์รหัสสี HEX
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <input
-                            type="color"
-                            value={config.embed_customization.button_color || "#5865F2"}
-                            onChange={(e) => {
-                              const newColor = e.target.value;
-                              setConfig((prev) => ({
-                                ...prev,
-                                embed_customization: {
-                                  ...prev.embed_customization,
-                                  button_color: newColor,
-                                  button_style: colorToDiscordStyle(newColor)
-                                }
-                              }));
-                            }}
-                            style={{
-                              width: "40px",
-                              height: "36px",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              borderRadius: "6px"
-                            }}
-                          />
-                          <input
-                            type="text"
-                            value={config.embed_customization.button_color || "#5865F2"}
-                            onChange={(e) => {
-                              const newColor = e.target.value;
-                              setConfig((prev) => ({
-                                ...prev,
-                                embed_customization: {
-                                  ...prev.embed_customization,
-                                  button_color: newColor,
-                                  button_style: colorToDiscordStyle(newColor)
-                                }
-                              }));
-                            }}
-                            placeholder="#5865F2"
-                            style={{
-                              width: "100px",
-                              background: "#0b1329",
-                              border: "1px solid #334155",
-                              borderRadius: "6px",
-                              padding: "8px 10px",
-                              color: "#fff",
-                              fontSize: "0.85rem",
-                              fontFamily: "monospace"
-                            }}
-                          />
-                        </div>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#cbd5e1" }}>
+                          🔘 4 สีมาตรฐานทางการของปุ่ม Discord (Official Button Styles):
+                        </label>
+                        <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                          คลิกเลือกสีปุ่มที่คุณต้องการให้แสดงบนหน้าต่างแชท Discord
+                        </span>
                       </div>
 
-                      {/* Color Presets */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "8px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "14px" }}>
                         {[
-                          { name: "Blurple", hex: "#5865F2" },
-                          { name: "Emerald", hex: "#10B981" },
-                          { name: "Ruby Red", hex: "#EF4444" },
-                          { name: "Charcoal", hex: "#4B5563" },
-                          { name: "Amber Gold", hex: "#F59E0B" },
-                          { name: "Violet", hex: "#8B5CF6" },
-                          { name: "Neon Pink", hex: "#EC4899" },
-                          { name: "Cyan", hex: "#06B6D4" },
-                          { name: "Flame Orange", hex: "#F97316" },
-                        ].map((preset) => {
-                          const isSelected = (config.embed_customization.button_color?.toUpperCase() === preset.hex.toUpperCase());
+                          { id: "primary", name: "Blurple (น้ำเงิน)", hex: "#5865F2", desc: "สไตล์ Primary" },
+                          { id: "success", name: "Green (เขียว)", hex: "#248046", desc: "สไตล์ Success" },
+                          { id: "danger", name: "Red (แดง)", hex: "#DA373C", desc: "สไตล์ Danger" },
+                          { id: "secondary", name: "Gray (เทา)", hex: "#4E5058", desc: "สไตล์ Secondary" },
+                        ].map((btn) => {
+                          const isSelected = (config.embed_customization.button_style || "primary") === btn.id;
                           return (
                             <button
-                              key={preset.name}
+                              key={btn.id}
                               type="button"
                               onClick={() => {
                                 setConfig((prev) => ({
                                   ...prev,
                                   embed_customization: {
                                     ...prev.embed_customization,
-                                    button_color: preset.hex,
-                                    button_style: colorToDiscordStyle(preset.hex)
+                                    button_style: btn.id as any,
+                                    button_color: btn.hex
                                   }
                                 }));
                               }}
                               style={{
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
-                                gap: "8px",
+                                gap: "6px",
                                 background: isSelected ? "rgba(59, 130, 246, 0.2)" : "#1e293b",
                                 border: isSelected ? "2px solid #3b82f6" : "1px solid #334155",
-                                borderRadius: "6px",
-                                padding: "6px 10px",
+                                borderRadius: "8px",
+                                padding: "12px 10px",
                                 cursor: "pointer",
-                                textAlign: "left",
-                                transition: "all 0.15s ease"
+                                transition: "all 0.15s ease",
+                                textAlign: "center"
                               }}
                             >
-                              <span
+                              <div
                                 style={{
-                                  width: "16px",
-                                  height: "16px",
-                                  borderRadius: "4px",
-                                  background: preset.hex,
-                                  display: "inline-block",
-                                  flexShrink: 0
+                                  width: "28px",
+                                  height: "28px",
+                                  borderRadius: "6px",
+                                  background: btn.hex,
+                                  boxShadow: isSelected ? "0 0 10px " + btn.hex : "none"
                                 }}
                               />
-                              <span style={{ fontSize: "0.75rem", color: isSelected ? "#fff" : "#cbd5e1", fontWeight: isSelected ? 700 : 500 }}>
-                                {preset.name}
+                              <span style={{ fontSize: "0.8rem", color: isSelected ? "#fff" : "#cbd5e1", fontWeight: isSelected ? 700 : 500 }}>
+                                {btn.name}
+                              </span>
+                              <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
+                                {btn.desc} {isSelected ? "✓" : ""}
                               </span>
                             </button>
                           );
                         })}
                       </div>
+
+                      {/* 1-Click Color Themes with Matching Emoji */}
+                      <div style={{ borderTop: "1px solid #1e293b", paddingTop: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+                          <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#cbd5e1" }}>
+                            ✨ ทางลัดจัดธีมสีพร้อมอีโมจิ (1-Click Theme Matcher):
+                          </label>
+                          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+                            คลิกเพื่อปรับสีปุ่มและไอคอนให้ออกมาเป็นธีมเดียวกัน
+                          </span>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "8px" }}>
+                          {[
+                            { name: "Violet", emoji: "🟣", style: "primary", hex: "#8B5CF6" },
+                            { name: "Gold", emoji: "🟡", style: "primary", hex: "#F59E0B" },
+                            { name: "Pink", emoji: "🌸", style: "danger", hex: "#EC4899" },
+                            { name: "Cyan", emoji: "💎", style: "primary", hex: "#06B6D4" },
+                            { name: "Orange", emoji: "🔥", style: "danger", hex: "#F97316" },
+                            { name: "Emerald", emoji: "🟢", style: "success", hex: "#10B981" },
+                            { name: "Ruby", emoji: "🔴", style: "danger", hex: "#EF4444" },
+                            { name: "Dark", emoji: "⚪", style: "secondary", hex: "#4B5563" },
+                            { name: "Blurple", emoji: "🎫", style: "primary", hex: "#5865F2" },
+                          ].map((theme) => {
+                            const isThemeSelected =
+                              config.embed_customization.button_emoji === theme.emoji &&
+                              config.embed_customization.button_style === theme.style;
+                            return (
+                              <button
+                                key={theme.name}
+                                type="button"
+                                onClick={() => {
+                                  setConfig((prev) => ({
+                                    ...prev,
+                                    embed_customization: {
+                                      ...prev.embed_customization,
+                                      button_style: theme.style as any,
+                                      button_emoji: theme.emoji,
+                                      button_color: theme.hex
+                                    }
+                                  }));
+                                }}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  background: isThemeSelected ? "rgba(59, 130, 246, 0.2)" : "#1e293b",
+                                  border: isThemeSelected ? "2px solid #3b82f6" : "1px solid #334155",
+                                  borderRadius: "6px",
+                                  padding: "6px 8px",
+                                  cursor: "pointer",
+                                  textAlign: "left",
+                                  transition: "all 0.15s ease"
+                                }}
+                              >
+                                <span style={{ fontSize: "0.95rem" }}>{theme.emoji}</span>
+                                <span style={{ fontSize: "0.75rem", color: isThemeSelected ? "#fff" : "#cbd5e1", fontWeight: isThemeSelected ? 700 : 500 }}>
+                                  {theme.name}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
 
-                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "6px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "1.1rem" }}>🎨</span>
-                      <span style={{ fontSize: "0.8rem", color: "#93c5fd" }}>
-                        <strong>ระบบเลือกสีอิสระ:</strong> เลือกสีที่ต้องการผ่าน Color Picker หรือพิมพ์รหัส HEX ได้ตามใจชอบ สีจะถูกบันทึก แสดงใน Live Preview และบอทจะซิงค์สไตล์ปุ่มไปยัง Discord Panel ทันที
-                      </span>
+                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "6px", padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <span style={{ fontSize: "1.2rem", marginTop: "2px" }}>💡</span>
+                      <div style={{ fontSize: "0.78rem", color: "#93c5fd", lineHeight: 1.5 }}>
+                        <strong>ทำไม Discord ถึงไม่มีปุ่มสีม่วงหรือสีเหลือง?</strong>
+                        <div style={{ color: "#cbd5e1", marginTop: "4px" }}>
+                          Discord API กำหนดให้ปุ่ม Interaction Component ทั่วโลกมีได้เพียง <strong>4 สีมาตรฐาน</strong> (น้ำเงิน, เขียว, แดง, เทา) ไม่สามารถใส่โค้ดสี Hex อิสระบนตัวปุ่มได้
+                        </div>
+                        <div style={{ color: "#93c5fd", marginTop: "4px" }}>
+                          ✨ <strong>วิธีแต่งธีมสีม่วง ทอง ชมพู หรือฟ้าให้สวยงาม:</strong> แนะนำให้ใช้ <strong>สีแถบ Embed ด้านบน</strong> (ซึ่งรองรับโค้ดสี Hex 16.7 ล้านสีได้เต็มรูปแบบ) ร่วมกับ <strong>ไอคอนอีโมจิสีประจำธีม</strong> (เช่น 🟣, 🟡, 🌸, 💎) หน้าข้อความปุ่ม
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -2360,34 +2380,36 @@ export default function DashboardTicketPage() {
                     </div>
                   </div>
 
-                  {/* Interactive Button Preview */}
+                  {/* Interactive Button Preview (Real Discord Appearance) */}
                   <div style={{ marginTop: "10px" }}>
                     <button
                       type="button"
                       style={{
-                        background:
-                          config.embed_customization.button_color ||
-                          (config.embed_customization.button_style === "success"
-                            ? "#10b981"
-                            : config.embed_customization.button_style === "danger"
-                            ? "#ef4444"
-                            : config.embed_customization.button_style === "secondary"
-                            ? "#4b5563"
-                            : "#5865F2"),
+                        background: getDiscordButtonColor(config.embed_customization.button_style),
                         color: "#fff",
                         border: "none",
-                        padding: "8px 14px",
+                        padding: "9px 16px",
                         borderRadius: "4px",
                         fontSize: "0.85rem",
                         fontWeight: 600,
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px",
-                        cursor: "default"
+                        gap: "8px",
+                        cursor: "default",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
                       }}
                     >
-                      <span>{config.embed_customization.button_emoji || "🎫"}</span> {config.embed_customization.button_text || "สร้าง Ticket ใหม่"}
+                      <span style={{ fontSize: "1rem" }}>{config.embed_customization.button_emoji || "🎫"}</span>
+                      <span>{config.embed_customization.button_text || "สร้าง Ticket ใหม่"}</span>
                     </button>
+                    <div style={{ marginTop: "6px", fontSize: "0.72rem", color: "#94a3b8" }}>
+                      สไตล์ปุ่มบน Discord: <strong style={{ color: "#fff" }}>
+                        {config.embed_customization.button_style === "success" ? "🟢 Success (เขียว)" :
+                         config.embed_customization.button_style === "danger" ? "🔴 Danger (แดง)" :
+                         config.embed_customization.button_style === "secondary" ? "⚪ Secondary (เทา)" :
+                         "🔵 Primary (น้ำเงิน Blurple)"}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               </div>

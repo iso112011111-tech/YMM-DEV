@@ -215,8 +215,10 @@ export async function verifyGuildAdmin(
 // -------------------------------------------------------------
 
 export function encryptApiKey(plaintext: string, guildId: string): string {
-  const masterKeyHex =
-    process.env.ENCRYPTION_KEY || "088b8aaf4817b9e81eb8a17a029997bf96e619cf12e01d9cdfd26cfb7c9e4661";
+  const masterKeyHex = process.env.ENCRYPTION_KEY;
+  if (!masterKeyHex) {
+    throw new Error("ENCRYPTION_KEY environment variable is not set. Cannot encrypt API key.");
+  }
 
   let key: Buffer;
   if (/^[0-9a-fA-F]{64}$/.test(masterKeyHex)) {

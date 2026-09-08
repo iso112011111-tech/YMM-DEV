@@ -125,9 +125,10 @@ export async function GET(request: Request) {
     .map((c) => c.trim().split("="))
     .find(([name]) => name === "ymm_oauth_redirect")?.[1];
 
-  const destination = redirectCookie && redirectCookie.startsWith("/") ? redirectCookie : "/";
+  const isValidRedirect = Boolean(redirectCookie && redirectCookie.startsWith("/") && !redirectCookie.startsWith("//"));
+  const safeRedirect = isValidRedirect ? (redirectCookie as string) : "/dashboard";
 
-  const response = NextResponse.redirect(new URL(destination, request.url));
+  const response = NextResponse.redirect(new URL(safeRedirect, request.url));
   response.cookies.set(SESSION_COOKIE, createSession(profile), sessionCookieOptions());
   response.cookies.set(OAUTH_STATE_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
   response.cookies.set("ymm_oauth_redirect", "", { ...sessionCookieOptions(), maxAge: 0 });

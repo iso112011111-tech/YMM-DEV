@@ -2097,8 +2097,8 @@ export default function DashboardTicketPage() {
                         fontSize: "0.9rem"
                       }}
                     />
-                    <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                      {["gemini-3.6-flash", "gemini-3.8-flash", "gpt-4o-mini"].map((m) => (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "6px", flexWrap: "wrap" }}>
+                      {["gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gpt-4o-mini"].map((m) => (
                         <button
                           key={m}
                           type="button"

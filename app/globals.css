@@ -2477,6 +2477,33 @@ textarea {
   min-width: 0;
 }
 
+.role-dashboard-tabs {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #315781 transparent;
+}
+
+.role-dashboard-tabs::-webkit-scrollbar {
+  height: 5px;
+}
+
+.role-dashboard-tabs::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: #315781;
+}
+
+.role-dashboard-tabs > button {
+  flex: 0 0 auto !important;
+  white-space: nowrap;
+}
+
 .dash-root,
 .tc-root {
   min-width: 0;
@@ -2571,6 +2598,15 @@ textarea {
   .dash-tabs-bar {
     margin-left: -2px;
     margin-right: -2px;
+  }
+
+  .role-dashboard-tabs {
+    justify-content: flex-start !important;
+    padding-bottom: 6px !important;
+  }
+
+  .role-dashboard-tabs > button {
+    min-width: max-content !important;
   }
 
   .dash-tab-btn {

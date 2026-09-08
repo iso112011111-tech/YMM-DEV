@@ -512,7 +512,7 @@ export default function DashboardPage() {
             padding: "24px",
             minHeight: "520px"
           }}>
-            <div style={{
+            <div className="role-dashboard-tabs" style={{
               background: "#131d31",
               border: "1px solid rgba(255, 255, 255, 0.1)",
               borderRadius: "20px",
@@ -629,7 +629,7 @@ export default function DashboardPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   style={{
-                    flex: "1 0 auto",
+                    flex: "0 0 auto",
                     minWidth: "max-content",
                     padding: "10px 14px",
                     borderRadius: "10px",

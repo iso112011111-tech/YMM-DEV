@@ -111,7 +111,8 @@ export function getRoleAdminDb(): Firestore {
 
 export async function verifyGuildAdmin(
   request: Request,
-  guildId: string
+  guildId: string,
+  botType: "ticket" | "role" = "ticket"
 ): Promise<{ authorized: boolean; profile?: DiscordProfile; error?: string; status?: number }> {
   if (!guildId) {
     return { authorized: false, error: "Missing guild ID", status: 400 };
@@ -149,7 +150,11 @@ export async function verifyGuildAdmin(
   }
 
   // 2. Fallback ตรวจสอบผ่าน Discord API แบบ Realtime หากมี Bot Token
-  const token = (process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TICKET_BOT_TOKEN || "").replace(/['"]/g, "").trim();
+  const token = (
+    botType === "role"
+      ? (process.env.DISCORD_ROLE_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
+      : (process.env.DISCORD_TICKET_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
+  ).replace(/['"]/g, "").trim();
   if (token) {
     try {
       const guildRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {

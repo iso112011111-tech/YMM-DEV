@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing guild_id" }, { status: 400 });
   }
 
-  const auth = await verifyGuildAdmin(request, guildId);
+  const auth = await verifyGuildAdmin(request, guildId, "role");
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status || 403 });
   }
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing guild_id" }, { status: 400 });
     }
 
-    const auth = await verifyGuildAdmin(request, guildId);
+    const auth = await verifyGuildAdmin(request, guildId, "role");
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status || 403 });
     }

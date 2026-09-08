@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readSession, SESSION_COOKIE } from "@/lib/discordAuth";
 import { getTicketAdminDb } from "@/lib/serverFirestore";
 
-const TICKET_BOT_TOKEN = (process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TICKET_BOT_TOKEN || "")
+const TICKET_BOT_TOKEN = (process.env.DISCORD_TICKET_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
   .replace(/['"]/g, "")
   .trim();
 

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing guild_id" }, { status: 400 });
   }
 
-  const auth = await verifyGuildAdmin(request, guildId);
+  const auth = await verifyGuildAdmin(request, guildId, "ticket");
   if (!auth.authorized) {
     return NextResponse.json({ error: auth.error }, { status: auth.status || 403 });
   }
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "กรุณากรอกหัวข้อและเนื้อหาของบทความ" }, { status: 400 });
     }
 
-    const auth = await verifyGuildAdmin(request, guild_id);
+    const auth = await verifyGuildAdmin(request, guild_id, "ticket");
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status || 403 });
     }
@@ -106,7 +106,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Missing guild_id or article_id" }, { status: 400 });
     }
 
-    const auth = await verifyGuildAdmin(request, guildId);
+    const auth = await verifyGuildAdmin(request, guildId, "ticket");
     if (!auth.authorized) {
       return NextResponse.json({ error: auth.error }, { status: auth.status || 403 });
     }

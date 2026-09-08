@@ -180,9 +180,10 @@ export default function DashboardTicketPage() {
   const [roles, setRoles] = useState<DiscordRole[]>([]);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingGuilds, setLoadingGuilds] = useState(true);
+  const [isCustomServer, setIsCustomServer] = useState(false);
 
   const isLoggedIn = Boolean(profile);
-  const hasBotInCurrentServer = (botGuilds || []).some((g) => g.id === config.guild_id);
+  const hasBotInCurrentServer = (botGuilds || []).some((g) => g.id === config.guild_id) || Boolean(config.guild_id && isCustomServer);
 
   // 1. Fetch User Profile
   useEffect(() => {
@@ -503,44 +504,163 @@ export default function DashboardTicketPage() {
             </span>
           </div>
 
-          {/* Server Switcher Dropdown */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>เซิร์ฟเวอร์:</span>
-            <select
-              value={config.guild_id}
-              onChange={(e) => {
-                const selected = botGuilds.find((g) => g.id === e.target.value);
-                if (selected) {
-                  setConfig((prev) => ({
-                    ...prev,
-                    guild_id: selected.id,
-                    guild_name: selected.name,
-                  }));
-                }
-              }}
-              style={{
-                background: "#1e293b",
-                color: "#fff",
-                border: "1px solid rgba(88, 101, 242, 0.4)",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                outline: "none",
-                cursor: "pointer",
-                maxWidth: "240px"
-              }}
-            >
-              {botGuilds.length === 0 ? (
-                <option value="">{loadingGuilds ? "กำลังค้นหาเซิร์ฟเวอร์..." : "ไม่พบบอทในเซิร์ฟเวอร์ใด"}</option>
-              ) : (
-                botGuilds.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
+          {/* Right Header Actions: Server Selector, Profile & Save Button */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            {/* Server Selector Dropdown or Custom Input */}
+            {botGuilds.length > 0 && !isCustomServer ? (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(255, 255, 255, 0.06)",
+                padding: "6px 12px",
+                borderRadius: "10px",
+                border: "1px solid rgba(255, 255, 255, 0.1)"
+              }}>
+                <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontWeight: 500 }}>เซิร์ฟเวอร์:</span>
+                <select
+                  value={config.guild_id}
+                  onChange={(e) => {
+                    const selectedVal = e.target.value;
+                    if (selectedVal === "custom") {
+                      setIsCustomServer(true);
+                    } else {
+                      const selected = botGuilds.find((g) => g.id === selectedVal);
+                      setConfig((prev) => ({
+                        ...prev,
+                        guild_id: selectedVal,
+                        guild_name: selected ? selected.name : prev.guild_name
+                      }));
+                    }
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    outline: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  {botGuilds.map((g) => (
+                    <option key={g.id} value={g.id} style={{ background: "#0c1322", color: "#fff" }}>
+                      {g.name}
+                    </option>
+                  ))}
+                  <option value="custom" style={{ background: "#0c1322", color: "#cbd5e1" }}>
+                    Custom Server ID...
                   </option>
-                ))
-              )}
-            </select>
+                </select>
+              </div>
+            ) : (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(255, 255, 255, 0.06)",
+                padding: "6px 12px",
+                borderRadius: "10px",
+                border: "1px solid rgba(255, 255, 255, 0.1)"
+              }}>
+                <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Server ID:</span>
+                <input
+                  type="text"
+                  value={config.guild_id}
+                  onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    width: "150px",
+                    outline: "none"
+                  }}
+                  placeholder="ID เซิร์ฟเวอร์..."
+                />
+                {botGuilds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomServer(false)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#94a3b8",
+                      fontSize: "0.75rem",
+                      cursor: "pointer",
+                      textDecoration: "underline"
+                    }}
+                  >
+                    ย้อนกลับ
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Profile Avatar Badge or Login Button */}
+            {profile ? (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(255, 255, 255, 0.06)",
+                padding: "4px 10px",
+                borderRadius: "20px",
+                border: "1px solid rgba(255, 255, 255, 0.1)"
+              }}>
+                <Image
+                  src={
+                    profile.avatar
+                      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                      : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+                  }
+                  alt=""
+                  width={24}
+                  height={24}
+                  style={{ borderRadius: "50%" }}
+                  unoptimized
+                />
+                <span style={{ fontSize: "0.85rem", color: "#fff", fontWeight: 600 }}>
+                  {profile.globalName || profile.username}
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    setProfile(null);
+                    window.location.reload();
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#94a3b8",
+                    fontSize: "0.75rem",
+                    cursor: "pointer"
+                  }}
+                  title="ออกจากระบบ"
+                >
+                  ออก
+                </button>
+              </div>
+            ) : (
+              <a
+                href="/api/auth/discord?redirect=/dashboard-ticket"
+                style={{
+                  background: "#5865F2",
+                  color: "#fff",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center"
+                }}
+              >
+                Log In Discord
+              </a>
+            )}
 
             {/* Save Button */}
             <button

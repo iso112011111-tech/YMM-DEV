@@ -65,6 +65,8 @@ interface TranscriptData {
   expiresAtMs: number;
   messages: TranscriptMessage[];
   messageCount: number;
+  original_message_count?: number;
+  truncated?: boolean;
 }
 
 interface DiscordUserProfile {
@@ -497,6 +499,19 @@ export default function TranscriptPage() {
           </div>
 
           <div className="tc-chat-feed">
+            {Boolean(transcript.truncated) && (
+              <div className="tc-truncated-banner" role="alert">
+                <span className="tc-truncated-icon">⚠️</span>
+                <div className="tc-truncated-text">
+                  ประวัติการสนทนานี้มีขนาดใหญ่เกินกำหนด จึงแสดงเฉพาะ{" "}
+                  <strong>{transcript.messageCount ?? transcript.messages?.length ?? 0}</strong>{" "}
+                  ข้อความล่าสุด จากทั้งหมด{" "}
+                  <strong>{transcript.original_message_count ?? transcript.messageCount ?? transcript.messages?.length ?? 0}</strong>{" "}
+                  ข้อความ
+                </div>
+              </div>
+            )}
+
             {!transcript.messages || transcript.messages.length === 0 ? (
               <div className="tc-empty">ไม่มีข้อความในประวัติการสนทนานี้</div>
             ) : (

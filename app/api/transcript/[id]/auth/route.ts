@@ -104,6 +104,9 @@ export async function GET(
       guildOwnerId?: string;
       expiresAtMs?: number;
       createdAtMs?: number;
+      truncated?: boolean;
+      original_message_count?: number;
+      messageCount?: number;
       [key: string]: unknown;
     };
 
@@ -137,6 +140,21 @@ export async function GET(
     const payloadData = {
       id: transcriptId,
       ...transcript,
+      truncated: transcript.truncated ?? false,
+      original_message_count:
+        typeof transcript.original_message_count === "number"
+          ? transcript.original_message_count
+          : typeof transcript.messageCount === "number"
+          ? transcript.messageCount
+          : Array.isArray(transcript.messages)
+          ? transcript.messages.length
+          : 0,
+      messageCount:
+        typeof transcript.messageCount === "number"
+          ? transcript.messageCount
+          : Array.isArray(transcript.messages)
+          ? transcript.messages.length
+          : 0,
     };
 
     // 4. เงื่อนไข A: คนเปิด Ticket

@@ -69,7 +69,7 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
             >
               ▣ &nbsp; ดูวิธีการใช้งาน
             </button>
-            {bot.name === "BOT-ROLE" && (
+            {(bot.name === "BOT-ROLE" || bot.name === "BOT-TICKET") && (
               isLoggedIn ? (
                 <Link
                   className="outline-button"

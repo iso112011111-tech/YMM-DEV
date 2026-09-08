@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <main>
-      <Navbar onOpenGuide={() => setIsGuideOpen(true)} />
+      <Navbar onOpenGuide={openGuide} />
       <Hero onOpenGuide={() => setIsGuideOpen(true)} />
       <Features />
       <FeaturedBot onOpenGuide={openGuide} />

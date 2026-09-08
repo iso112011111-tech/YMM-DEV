@@ -73,14 +73,16 @@ export default function FeaturedBot({ onOpenGuide }: FeaturedBotProps) {
               isLoggedIn ? (
                 <Link
                   className="outline-button"
-                  href="/dashboard"
+                  href={bot.name === "BOT-TICKET" ? "/dashboard-ticket" : "/dashboard"}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
-                    borderColor: "rgba(139, 92, 246, 0.5)",
-                    color: "#c4b5fd"
+                    background: bot.name === "BOT-TICKET"
+                      ? "linear-gradient(135deg, rgba(88, 101, 242, 0.2), rgba(6, 182, 212, 0.2))"
+                      : "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
+                    borderColor: bot.name === "BOT-TICKET" ? "rgba(88, 101, 242, 0.6)" : "rgba(139, 92, 246, 0.5)",
+                    color: bot.name === "BOT-TICKET" ? "#93c5fd" : "#c4b5fd"
                   }}
                 >
                   ⚙ &nbsp; Edit Dashboard

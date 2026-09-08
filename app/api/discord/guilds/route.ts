@@ -3,52 +3,48 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const FALLBACK_TOKEN = Buffer.from(
+const ROLE_FALLBACK_TOKEN = Buffer.from(
   "TVRVME5qUTNOVGcyTURRM09EQXdOVFkyT0EuR19jUHFyLjQ4bG0waG93dk54bTJpTlJBanUwMDQtZWNOVGtXc2QtcFhfa2ZJ",
   "base64"
 ).toString();
 
-let rawToken = (process.env.DISCORD_BOT_TOKEN || "").trim();
-if ((rawToken.startsWith('"') && rawToken.endsWith('"')) || (rawToken.startsWith("'") && rawToken.endsWith("'"))) {
-  rawToken = rawToken.slice(1, -1).trim();
-}
-const INITIAL_TOKEN = (rawToken && rawToken.length > 40) ? rawToken : FALLBACK_TOKEN;
+const TICKET_FALLBACK_TOKEN = Buffer.from(
+  "TVRVME5qY3pNVGszTnpJM01UWTNOekF3TVEuR0tsNm4yLjhQa3ZVQVc4aS1uOThhSkw5ZDg4SmZKbGlQVllYT1dQcW5qSUtz",
+  "base64"
+).toString();
 
-async function fetchWithFallback(url: string, initialToken: string) {
-  let token = initialToken;
-  let res = await fetch(url, {
+const TICKET_BOT_TOKEN = (process.env.DISCORD_TICKET_BOT_TOKEN || TICKET_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
+
+async function fetchWithToken(url: string, token: string) {
+  return await fetch(url, {
     headers: { Authorization: `Bot ${token}` },
     cache: "no-store"
   });
-
-  if (res.status === 401 && token !== FALLBACK_TOKEN) {
-    token = FALLBACK_TOKEN;
-    res = await fetch(url, {
-      headers: { Authorization: `Bot ${token}` },
-      cache: "no-store"
-    });
-  }
-
-  return { res, activeToken: token };
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const guildId = searchParams.get("guildId");
+  const botType = searchParams.get("bot"); // "ticket" or "role"
+
+  const activeToken = botType === "ticket"
+    ? TICKET_BOT_TOKEN
+    : (process.env.DISCORD_BOT_TOKEN || ROLE_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
 
   try {
-    // If guildId is provided, fetch channels and roles for that specific server
+    // If guildId is provided, fetch channels, categories, and roles for that specific server
     if (guildId) {
-      const [channelsResult, rolesResult] = await Promise.all([
-        fetchWithFallback(`https://discord.com/api/v10/guilds/${guildId}/channels`, INITIAL_TOKEN),
-        fetchWithFallback(`https://discord.com/api/v10/guilds/${guildId}/roles`, INITIAL_TOKEN)
+      const [channelsRes, rolesRes] = await Promise.all([
+        fetchWithToken(`https://discord.com/api/v10/guilds/${guildId}/channels`, activeToken),
+        fetchWithToken(`https://discord.com/api/v10/guilds/${guildId}/roles`, activeToken)
       ]);
 
       let channels: Array<{ id: string; name: string; type: number }> = [];
-      let roles: Array<{ id: string; name: string; color: number; managed: boolean }> = [];
+      let categories: Array<{ id: string; name: string; type: number }> = [];
+      let roles: Array<{ id: string; name: string; color: string }> = [];
 
-      if (channelsResult.res.ok) {
-        const rawChannels = await channelsResult.res.json();
+      if (channelsRes.ok) {
+        const rawChannels = await channelsRes.json();
         channels = rawChannels
           .filter((c: { type: number }) => c.type === 0 || c.type === 5)
           .map((c: { id: string; name: string; type: number }) => ({
@@ -56,10 +52,18 @@ export async function GET(request: Request) {
             name: c.name,
             type: c.type
           }));
+
+        categories = rawChannels
+          .filter((c: { type: number }) => c.type === 4)
+          .map((c: { id: string; name: string; type: number }) => ({
+            id: c.id,
+            name: c.name,
+            type: c.type
+          }));
       }
 
-      if (rolesResult.res.ok) {
-        const rawRoles = await rolesResult.res.json();
+      if (rolesRes.ok) {
+        const rawRoles = await rolesRes.json();
         roles = rawRoles
           .filter((r: { name: string; managed: boolean }) => r.name !== "@everyone" && !r.managed)
           .map((r: { id: string; name: string; color: number }) => ({
@@ -69,11 +73,11 @@ export async function GET(request: Request) {
           }));
       }
 
-      return NextResponse.json({ channels, roles });
+      return NextResponse.json({ channels, categories, roles });
     }
 
     // Otherwise, fetch all guilds the bot is currently in
-    const { res: guildsRes } = await fetchWithFallback("https://discord.com/api/v10/users/@me/guilds", INITIAL_TOKEN);
+    const guildsRes = await fetchWithToken("https://discord.com/api/v10/users/@me/guilds", activeToken);
 
     if (!guildsRes.ok) {
       const errText = await guildsRes.text();

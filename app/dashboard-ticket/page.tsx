@@ -177,7 +177,7 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
   },
   ai_config: {
     provider: "gemini",
-    model: "gemini-3.6-flash",
+    model: "gemini-3.5-flash",
     api_key: "",
     is_active: true,
     channel_id: "",
@@ -423,7 +423,7 @@ export default function DashboardTicketPage() {
         ticket_config: config.ticket_config,
         ai_config: {
           provider: config.ai_config.provider || "gemini",
-          model: config.ai_config.model || "gemini-3.6-flash",
+          model: config.ai_config.model || "gemini-3.5-flash",
           is_active: Boolean(config.ai_config.is_active),
           channel_id: (config.ai_config.channel_ids && config.ai_config.channel_ids[0]) || (config.ai_config.channel_id ? config.ai_config.channel_id.trim() : null),
           channel_ids: config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id.trim()] : []),
@@ -1860,14 +1860,15 @@ export default function DashboardTicketPage() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
-                              const rawUid = inputChannelUid.trim().replace(/[<#>]/g, "");
-                              if (!rawUid) return;
+                              const matches = inputChannelUid.match(/\d{17,21}/g) || (inputChannelUid.trim() ? [inputChannelUid.trim().replace(/[<#>]/g, "")] : []);
+                              if (matches.length === 0) return;
                               const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
-                              if (currentList.includes(rawUid)) {
+                              const newUids = matches.filter(id => !currentList.includes(id));
+                              if (newUids.length === 0) {
                                 alert("ห้องนี้มีในรายการแล้ว");
                                 return;
                               }
-                              const updated = [...currentList, rawUid];
+                              const updated = [...currentList, ...newUids];
                               setConfig((prev) => ({
                                 ...prev,
                                 ai_config: {
@@ -1927,17 +1928,18 @@ export default function DashboardTicketPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          const rawUid = inputChannelUid.trim().replace(/[<#>]/g, "");
-                          if (!rawUid) {
+                          const matches = inputChannelUid.match(/\d{17,21}/g) || (inputChannelUid.trim() ? [inputChannelUid.trim().replace(/[<#>]/g, "")] : []);
+                          if (matches.length === 0) {
                             alert("กรุณากรอก UID เลขห้องก่อนกดเพิ่ม");
                             return;
                           }
                           const currentList = config.ai_config.channel_ids || (config.ai_config.channel_id ? [config.ai_config.channel_id] : []);
-                          if (currentList.includes(rawUid)) {
+                          const newUids = matches.filter(id => !currentList.includes(id));
+                          if (newUids.length === 0) {
                             alert("ห้องนี้มีในรายการแล้ว");
                             return;
                           }
-                          const updated = [...currentList, rawUid];
+                          const updated = [...currentList, ...newUids];
                           setConfig((prev) => ({
                             ...prev,
                             ai_config: {

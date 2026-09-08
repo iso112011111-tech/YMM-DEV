@@ -37,6 +37,7 @@ interface TicketAiConfig {
   model: string;
   api_key?: string;
   encrypted_api_key?: string | null;
+  has_api_key?: boolean;
   is_active: boolean;
   channel_id?: string | null;
   channel_ids?: string[];
@@ -165,6 +166,7 @@ const DEFAULT_CONFIG: FullTicketGuildConfig = {
     provider: "gemini",
     model: "gemini-3.5-flash",
     api_key: "",
+    has_api_key: false,
     is_active: true,
     channel_id: "",
     channel_ids: [],
@@ -206,6 +208,10 @@ export default function DashboardTicketPage() {
 
   // Tickets List State
   const [recentTickets, setRecentTickets] = useState<TicketItem[]>([]);
+
+  // API Key Validation State
+  const [apiKeyStatus, setApiKeyStatus] = useState<"idle" | "validating" | "success" | "error">("idle");
+  const [apiKeyMessage, setApiKeyMessage] = useState<string>("");
 
   // Discord Profile & Live Bot Data
   const [profile, setProfile] = useState<DiscordProfile | null>(null);
@@ -378,6 +384,12 @@ export default function DashboardTicketPage() {
       return;
     }
 
+    const hasNewApiKey = Boolean(config.ai_config.api_key && config.ai_config.api_key.trim());
+    if (hasNewApiKey) {
+      setApiKeyStatus("validating");
+      setApiKeyMessage("กำลังตรวจสอบ API Key...");
+    }
+
     setSaving(true);
     setSaveStatus("idle");
 
@@ -424,11 +436,20 @@ export default function DashboardTicketPage() {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
+        if (errJson.field === "api_key") {
+          setApiKeyStatus("error");
+          setApiKeyMessage(errJson.error || "API Key ไม่ถูกต้อง");
+          setSaveStatus("error");
+          setTimeout(() => setSaveStatus("idle"), 4000);
+          return;
+        }
         throw new Error(errJson.error || "บันทึกข้อมูลล้มเหลว");
       }
 
-      // Clear the typed key from local form state
-      if (config.ai_config.api_key) {
+      // Clear the typed key from local form state and display success
+      if (hasNewApiKey) {
+        setApiKeyStatus("success");
+        setApiKeyMessage("✅ ตรวจสอบสำเร็จ บันทึกเรียบร้อย");
         setConfig((prev) => ({
           ...prev,
           ai_config: {
@@ -437,12 +458,20 @@ export default function DashboardTicketPage() {
             has_api_key: true,
           },
         }));
+        setTimeout(() => {
+          setApiKeyStatus("idle");
+          setApiKeyMessage("");
+        }, 6000);
       }
 
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 4000);
     } catch (error: any) {
       console.error("Save config error:", error);
+      if (hasNewApiKey) {
+        setApiKeyStatus("error");
+        setApiKeyMessage(error.message || "การตรวจสอบ API Key ล้มเหลว");
+      }
       alert(error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 4000);
@@ -758,9 +787,9 @@ export default function DashboardTicketPage() {
             {/* Save Button */}
             <button
               onClick={handleSave}
-              disabled={saving || !hasBotInCurrentServer}
+              disabled={saving || apiKeyStatus === "validating" || !hasBotInCurrentServer}
               style={{
-                background: saving 
+                background: (saving || apiKeyStatus === "validating") 
                   ? "#475569" 
                   : saveStatus === "success" 
                     ? "#10b981" 
@@ -771,7 +800,7 @@ export default function DashboardTicketPage() {
                 borderRadius: "8px",
                 fontWeight: 600,
                 fontSize: "0.85rem",
-                cursor: (saving || !hasBotInCurrentServer) ? "not-allowed" : "pointer",
+                cursor: (saving || apiKeyStatus === "validating" || !hasBotInCurrentServer) ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
@@ -780,7 +809,13 @@ export default function DashboardTicketPage() {
                 whiteSpace: "nowrap"
               }}
             >
-              {saving ? "⏳ กำลังบันทึก..." : saveStatus === "success" ? "✓ บันทึกแล้ว" : "💾 บันทึกการตั้งค่า"}
+              {apiKeyStatus === "validating"
+                ? "⏳ กำลังตรวจสอบ API Key..."
+                : saving 
+                  ? "⏳ กำลังบันทึก..." 
+                  : saveStatus === "success" 
+                    ? "✓ บันทึกแล้ว" 
+                    : "💾 บันทึกการตั้งค่า"}
             </button>
           </div>
         </div>
@@ -1733,8 +1768,25 @@ export default function DashboardTicketPage() {
 
               {/* API Key */}
               <div className="dash-field">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label className="dash-label">API Key ของคุณ:</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <label className="dash-label" style={{ marginBottom: 0 }}>API Key ของคุณ:</label>
+                    {config.ai_config.has_api_key && (
+                      <span style={{
+                        fontSize: "0.72rem",
+                        color: "#10b981",
+                        background: "rgba(16, 185, 129, 0.12)",
+                        border: "1px solid rgba(16, 185, 129, 0.3)",
+                        padding: "2px 8px",
+                        borderRadius: "999px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px"
+                      }}>
+                        ● บันทึกแล้วและพร้อมใช้งาน
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
@@ -1747,13 +1799,38 @@ export default function DashboardTicketPage() {
                   type={showApiKey ? "text" : "password"}
                   className="dash-input"
                   value={config.ai_config.api_key || ""}
-                  onChange={(e) => setConfig((prev) => ({
-                    ...prev,
-                    ai_config: { ...prev.ai_config, api_key: e.target.value }
-                  }))}
-                  placeholder="วาง API Key (เช่น sk-... หรือ AIza...)"
+                  onChange={(e) => {
+                    if (apiKeyStatus !== "idle") {
+                      setApiKeyStatus("idle");
+                      setApiKeyMessage("");
+                    }
+                    setConfig((prev) => ({
+                      ...prev,
+                      ai_config: { ...prev.ai_config, api_key: e.target.value }
+                    }));
+                  }}
+                  placeholder={config.ai_config.has_api_key ? "กรอกเพื่อเปลี่ยน API Key ใหม่ (เว้นว่างไว้เพื่อใช้ Key เดิม)" : "วาง API Key (เช่น sk-... หรือ AIza...)"}
                 />
-                <small style={{ color: "#64748b", fontSize: "0.75rem", marginTop: "4px" }}>
+
+                {/* Inline Validation Status Message */}
+                {apiKeyStatus === "validating" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#60a5fa", fontSize: "0.8rem", marginTop: "6px" }}>
+                    <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>🔄</span>
+                    <span>กำลังตรวจสอบ API Key...</span>
+                  </div>
+                )}
+                {apiKeyStatus === "success" && (
+                  <div style={{ color: "#10b981", fontSize: "0.8rem", marginTop: "6px", fontWeight: 500 }}>
+                    {apiKeyMessage || "✅ ตรวจสอบสำเร็จ บันทึกเรียบร้อย"}
+                  </div>
+                )}
+                {apiKeyStatus === "error" && (
+                  <div style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "6px", fontWeight: 500 }}>
+                    ⚠️ {apiKeyMessage}
+                  </div>
+                )}
+
+                <small style={{ color: "#64748b", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
                   🔐 ระบบเข้ารหัสความปลอดภัย AES-256-GCM ผูกกับ Server ID เพื่อความปลอดภัยสูงสุด
                 </small>
               </div>

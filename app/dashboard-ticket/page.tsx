@@ -604,43 +604,105 @@ export default function DashboardTicketPage() {
       {/* Top Header Navbar */}
       <header className="dash-header">
         <div className="dash-header-inner">
-          {/* Logo & Navigation */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-              <Image src={logo} alt="Logo" width={32} height={32} style={{ borderRadius: "8px" }} />
-              <span style={{ fontWeight: 800, fontSize: "1.1rem", letterSpacing: "-0.5px", color: "#fff" }}>
-                YMM<span style={{ color: "#3b82f6" }}>.TICKET</span>
+          {/* Row 1: Logo & Brand + Mobile Profile Pill */}
+          <div className="dash-header-brand-row">
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+                <Image src={logo} alt="Logo" width={30} height={30} style={{ borderRadius: "8px", flexShrink: 0 }} />
+                <span style={{ fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.5px", color: "#fff", whiteSpace: "nowrap" }}>
+                  YMM<span style={{ color: "#3b82f6" }}>.TICKET</span>
+                </span>
+              </Link>
+              <span style={{
+                background: "rgba(59, 130, 246, 0.12)",
+                color: "#60a5fa",
+                border: "1px solid rgba(59, 130, 246, 0.25)",
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                padding: "2px 6px",
+                borderRadius: "6px",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap"
+              }}>
+                Dashboard
               </span>
-            </Link>
-            <span style={{
-              background: "rgba(59, 130, 246, 0.12)",
-              color: "#60a5fa",
-              border: "1px solid rgba(59, 130, 246, 0.25)",
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              padding: "2px 8px",
-              borderRadius: "6px",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase"
-            }}>
-              Dashboard
-            </span>
+            </div>
+
+            {/* Profile Avatar Badge on Mobile */}
+            <div className="dash-profile-mobile-wrap">
+              {profile ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  padding: "3px 8px",
+                  borderRadius: "20px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  whiteSpace: "nowrap"
+                }}>
+                  <Image
+                    src={
+                      profile.avatar
+                        ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                        : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+                    }
+                    alt=""
+                    width={20}
+                    height={20}
+                    style={{ borderRadius: "50%", flexShrink: 0 }}
+                    unoptimized
+                  />
+                  <span style={{ fontSize: "0.76rem", color: "#fff", fontWeight: 600, maxWidth: "75px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {profile.globalName || profile.username}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await fetch("/api/auth/logout", { method: "POST" });
+                      setProfile(null);
+                      window.location.reload();
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#94a3b8",
+                      fontSize: "0.7rem",
+                      cursor: "pointer",
+                      padding: 0
+                    }}
+                    title="ออกจากระบบ"
+                  >
+                    ออก
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href="/api/auth/discord?redirect=/dashboard-ticket"
+                  style={{
+                    background: "#3b82f6",
+                    color: "#fff",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    fontSize: "0.76rem",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    whiteSpace: "nowrap"
+                  }}
+                >
+                  Log In
+                </a>
+              )}
+            </div>
           </div>
 
-          {/* Controls: Server Selector, Profile, Save Button */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {/* Row 2: Controls: Server Selector, Desktop Profile, Save Button */}
+          <div className="dash-header-controls-row">
             {/* Server Selector */}
             {botGuilds.length > 0 ? (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "rgba(255, 255, 255, 0.05)",
-                padding: "4px 10px",
-                borderRadius: "8px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>เซิร์ฟเวอร์:</span>
+              <div className="dash-server-select-wrap">
+                <span style={{ fontSize: "0.75rem", color: "#94a3b8", flexShrink: 0 }}>เซิร์ฟเวอร์:</span>
                 <select
                   value={config.guild_id}
                   onChange={(e) => {
@@ -657,16 +719,7 @@ export default function DashboardTicketPage() {
                       guild_name: selected ? selected.name : "Server",
                     });
                   }}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: "0.82rem",
-                    fontWeight: 600,
-                    outline: "none",
-                    cursor: "pointer",
-                    maxWidth: "160px"
-                  }}
+                  className="dash-server-select"
                 >
                   {botGuilds.map((g) => (
                     <option key={g.id} value={g.id} style={{ background: "#0c1322", color: "#fff" }}>
@@ -676,105 +729,94 @@ export default function DashboardTicketPage() {
                 </select>
               </div>
             ) : (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "rgba(255, 255, 255, 0.05)",
-                padding: "4px 10px",
-                borderRadius: "8px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>เซิร์ฟเวอร์:</span>
+              <div className="dash-server-select-wrap">
+                <span style={{ fontSize: "0.75rem", color: "#94a3b8", flexShrink: 0 }}>เซิร์ฟเวอร์:</span>
                 <select
                   disabled
                   value=""
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#94a3b8",
-                    fontSize: "0.82rem",
-                    fontWeight: 600,
-                    outline: "none",
-                    cursor: "not-allowed",
-                    maxWidth: "240px"
-                  }}
+                  className="dash-server-select"
+                  style={{ cursor: "not-allowed", opacity: 0.8 }}
                 >
                   <option value="" style={{ background: "#0c1322", color: "#94a3b8" }}>
-                    {loadingGuilds ? "กำลังโหลดเซิร์ฟเวอร์..." : "ไม่พบเซิร์ฟเวอร์ที่คุณมีสิทธิ์จัดการ"}
+                    {loadingGuilds ? "กำลังโหลด..." : "ไม่พบเซิร์ฟเวอร์"}
                   </option>
                 </select>
               </div>
             )}
 
-            {/* Profile Avatar & Logout */}
-            {profile ? (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(255, 255, 255, 0.05)",
-                padding: "4px 10px",
-                borderRadius: "20px",
-                border: "1px solid rgba(255, 255, 255, 0.08)"
-              }}>
-                <Image
-                  src={
-                    profile.avatar
-                      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
-                      : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
-                  }
-                  alt=""
-                  width={22}
-                  height={22}
-                  style={{ borderRadius: "50%" }}
-                  unoptimized
-                />
-                <span style={{ fontSize: "0.8rem", color: "#fff", fontWeight: 600, maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {profile.globalName || profile.username}
-                </span>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await fetch("/api/auth/logout", { method: "POST" });
-                    setProfile(null);
-                    window.location.reload();
-                  }}
+            {/* Profile Avatar & Logout (Desktop only) */}
+            <div className="dash-profile-desktop-wrap">
+              {profile ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  padding: "4px 10px",
+                  borderRadius: "20px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  whiteSpace: "nowrap"
+                }}>
+                  <Image
+                    src={
+                      profile.avatar
+                        ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                        : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+                    }
+                    alt=""
+                    width={22}
+                    height={22}
+                    style={{ borderRadius: "50%", flexShrink: 0 }}
+                    unoptimized
+                  />
+                  <span style={{ fontSize: "0.8rem", color: "#fff", fontWeight: 600, maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {profile.globalName || profile.username}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await fetch("/api/auth/logout", { method: "POST" });
+                      setProfile(null);
+                      window.location.reload();
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#94a3b8",
+                      fontSize: "0.72rem",
+                      cursor: "pointer"
+                    }}
+                    title="ออกจากระบบ"
+                  >
+                    ออก
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href="/api/auth/discord?redirect=/dashboard-ticket"
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#94a3b8",
-                    fontSize: "0.72rem",
-                    cursor: "pointer"
+                    background: "#3b82f6",
+                    color: "#fff",
+                    padding: "6px 12px",
+                    borderRadius: "8px",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    whiteSpace: "nowrap"
                   }}
-                  title="ออกจากระบบ"
                 >
-                  ออก
-                </button>
-              </div>
-            ) : (
-              <a
-                href="/api/auth/discord?redirect=/dashboard-ticket"
-                style={{
-                  background: "#3b82f6",
-                  color: "#fff",
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center"
-                }}
-              >
-                Log In
-              </a>
-            )}
+                  Log In
+                </a>
+              )}
+            </div>
 
             {/* Save Button */}
             <button
               onClick={handleSave}
               disabled={saving || apiKeyStatus === "validating" || !hasBotInCurrentServer || botGuilds.length === 0}
+              className="dash-save-btn"
               style={{
                 background: (saving || apiKeyStatus === "validating") 
                   ? "#475569" 
@@ -783,25 +825,14 @@ export default function DashboardTicketPage() {
                     : (!hasBotInCurrentServer || botGuilds.length === 0)
                       ? "#475569"
                       : "#3b82f6",
-                color: "#fff",
-                border: "none",
-                padding: "7px 16px",
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "0.85rem",
                 cursor: (saving || apiKeyStatus === "validating" || !hasBotInCurrentServer || botGuilds.length === 0) ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
                 boxShadow: (saving || !hasBotInCurrentServer || botGuilds.length === 0) ? "none" : "0 2px 8px rgba(59, 130, 246, 0.25)",
-                transition: "all 0.15s ease",
-                whiteSpace: "nowrap"
               }}
             >
               {apiKeyStatus === "validating"
-                ? "⏳ กำลังตรวจสอบ API Key..."
+                ? "⏳ ตรวจสอบ..."
                 : saving 
-                  ? "⏳ กำลังบันทึก..." 
+                  ? "⏳ บันทึก..." 
                   : saveStatus === "success" 
                     ? "✓ บันทึกแล้ว" 
                     : "💾 บันทึกการตั้งค่า"}
@@ -867,6 +898,9 @@ export default function DashboardTicketPage() {
             border: "none",
             padding: 0,
             margin: 0,
+            minWidth: 0,
+            maxWidth: "100%",
+            width: "100%",
             opacity: (!loadingGuilds && !isAccessible) ? 0.45 : 1,
             pointerEvents: (!loadingGuilds && !isAccessible) ? "none" : "auto",
             transition: "opacity 0.2s ease"
@@ -1033,7 +1067,7 @@ export default function DashboardTicketPage() {
                   <p className="dash-card-subtitle">ปรับแต่งสีแถบ Embed และข้อความบนปุ่มเปิด Ticket ใน Discord</p>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "16px" }}>
+                <div className="dash-two-col-grid" style={{ marginBottom: "16px" }}>
                   <div className="dash-field">
                     <label className="dash-label">ข้อความบนปุ่ม (Button Text):</label>
                     <input
@@ -1216,7 +1250,7 @@ export default function DashboardTicketPage() {
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {config.embed_customization.categories.map((cat, idx) => (
-                      <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px", alignItems: "center" }}>
+                      <div key={idx} className="dash-category-row">
                         <input
                           type="text"
                           className="dash-input"
@@ -1453,7 +1487,7 @@ export default function DashboardTicketPage() {
         {/* TAB 2: ⚙️ SYSTEM & ROLES SETUP (Spacious Full Layout)                     */}
         {/* ========================================================================= */}
         {activeTab === "system" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+          <div className="dash-two-col-grid">
             {/* Channels & Logging */}
             <div className="dash-card">
               <div className="dash-card-header">
@@ -1581,7 +1615,7 @@ export default function DashboardTicketPage() {
                 <p className="dash-card-subtitle">ตั้งค่าเวลาตอบกลับเคสและปิด Ticket อัตโนมัติ</p>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+              <div className="dash-two-col-grid">
                 <div className="dash-field">
                   <label className="dash-label">เป้าหมายเวลาตอบกลับครั้งแรก (SLA Deadline):</label>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -1701,7 +1735,7 @@ export default function DashboardTicketPage() {
               {/* Provider Selection */}
               <div className="dash-field">
                 <label className="dash-label">เลือกผู้ให้บริการ AI (Provider):</label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px" }}>
+                <div className="dash-ai-provider-grid">
                   {[
                     { id: "gemini", name: "Google Gemini", desc: "แนะนำ: ฉลาด รวดเร็ว และรองรับ Multimodal Vision" },
                     { id: "openai", name: "OpenAI", desc: "GPT-4o / GPT-4o-mini" },
@@ -1883,13 +1917,7 @@ export default function DashboardTicketPage() {
               </div>
 
               {/* Add Room UID Row */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr)) auto",
-                gap: "10px",
-                alignItems: "end",
-                marginBottom: "16px"
-              }}>
+              <div className="dash-uid-grid">
                 <div>
                   <span className="dash-label" style={{ display: "block", marginBottom: "4px" }}>
                     กรอก UID เลขห้อง (Channel ID):
@@ -2077,7 +2105,7 @@ export default function DashboardTicketPage() {
                           ยังไม่ได้ระบุห้อง AI (AI จะตอบเฉพาะข้อมูลที่มีใน Knowledge Base)
                         </div>
                       ) : (
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px" }}>
+                        <div className="dash-channel-grid">
                           {channelList.map((cId) => {
                             const found = channels.find((c: any) => c.id === cId);
                             const isOrphan = channels.length > 0 && !found;
@@ -2167,7 +2195,7 @@ export default function DashboardTicketPage() {
               </div>
 
               <form onSubmit={handleAddKb}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px" }}>
+                <div className="dash-two-col-grid" style={{ marginBottom: "14px" }}>
                   <div className="dash-field">
                     <label className="dash-label">หัวข้อบทความ (Title):</label>
                     <input
@@ -2268,7 +2296,7 @@ export default function DashboardTicketPage() {
                   ยังไม่มีบทความในคลังความรู้ สามารถเพิ่มบทความแรกของคุณด้านบนได้ทันที
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "14px" }}>
+                <div className="dash-kb-grid">
                   {kbArticles.map((art) => (
                     <div
                       key={art.id}
@@ -2338,7 +2366,7 @@ export default function DashboardTicketPage() {
                 ยังไม่มีรายการ Ticket ในเซิร์ฟเวอร์นี้
               </div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", width: "100%", maxWidth: "100%" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8" }}>

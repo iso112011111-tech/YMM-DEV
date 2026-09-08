@@ -20,6 +20,8 @@ interface DashboardConfig {
   system_type: "both" | "emoji" | "form";
   log_channel_id: string;
   panel_channel_id?: string;
+  panel_title?: string;
+  panel_description?: string;
   welcome_enabled: boolean;
   welcome_title: string;
   welcome_message: string;
@@ -63,6 +65,8 @@ const DEFAULT_CONFIG: DashboardConfig = {
   system_type: "both",
   log_channel_id: "1546477565785546813",
   panel_channel_id: "1546477485904892004",
+  panel_title: "👑 ระบบรับยศอัตโนมัติ | Emoji Role",
+  panel_description: "ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ **{server}**\nกดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨",
   welcome_enabled: true,
   welcome_title: "🎉 ยินดีต้อนรับสู่ {server}!",
   welcome_message: "สวัสดี {user}\n\nคุณได้รับยศ 👑 {role} เรียบร้อยแล้ว\nขอให้สนุกกับการใช้งาน Server ของเรานะครับ 💜",
@@ -92,6 +96,8 @@ function sanitizeConfig(data: any): DashboardConfig {
     system_type: data?.system_type || DEFAULT_CONFIG.system_type,
     log_channel_id: data?.log_channel_id || DEFAULT_CONFIG.log_channel_id,
     panel_channel_id: data?.panel_channel_id || DEFAULT_CONFIG.panel_channel_id,
+    panel_title: data?.panel_title || DEFAULT_CONFIG.panel_title,
+    panel_description: data?.panel_description || DEFAULT_CONFIG.panel_description,
     welcome_enabled: typeof data?.welcome_enabled === "boolean" ? data.welcome_enabled : DEFAULT_CONFIG.welcome_enabled,
     welcome_title: data?.welcome_title || DEFAULT_CONFIG.welcome_title,
     welcome_message: data?.welcome_message || DEFAULT_CONFIG.welcome_message,
@@ -835,6 +841,61 @@ export default function DashboardPage() {
                   กำหนดว่าเมื่อสมาชิกกด Emoji แต่ละตัว จะได้รับบทบาทอะไร โดยเลือก Role จากเซิร์ฟเวอร์ได้ทันที
                 </p>
 
+                {/* Custom Panel Embed Text Configuration */}
+                <div style={{
+                  background: "#17233c",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  marginBottom: "20px"
+                }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>📝</span> Custom Panel Message (ตั้งค่าข้อความในแผงรับยศ)
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "6px" }}>Panel Title (หัวข้อแผงรับยศ)</label>
+                    <input
+                      type="text"
+                      value={config.panel_title || ""}
+                      onChange={(e) => setConfig({ ...config, panel_title: e.target.value })}
+                      placeholder="👑 ระบบรับยศอัตโนมัติ | Emoji Role"
+                      style={{
+                        width: "100%",
+                        height: "40px",
+                        background: "#0f172a",
+                        border: "1px solid rgba(255, 255, 255, 0.12)",
+                        color: "#fff",
+                        padding: "0 12px",
+                        borderRadius: "8px",
+                        fontSize: "0.85rem",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "6px" }}>Panel Description (ข้อความรายละเอียดในแผงรับยศ)</label>
+                    <textarea
+                      rows={3}
+                      value={config.panel_description || ""}
+                      onChange={(e) => setConfig({ ...config, panel_description: e.target.value })}
+                      placeholder="ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ {server}&#10;กดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨"
+                      style={{
+                        width: "100%",
+                        background: "#0f172a",
+                        border: "1px solid rgba(255, 255, 255, 0.12)",
+                        color: "#fff",
+                        padding: "10px 12px",
+                        borderRadius: "8px",
+                        fontSize: "0.85rem",
+                        outline: "none",
+                        resize: "vertical"
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {/* Inner Card: Add New Role Link */}
                 <div style={{
                   background: "#17233c",
@@ -1125,11 +1186,11 @@ export default function DashboardPage() {
                   {previewTab === "emoji_panel" && (
                     <>
                       <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem", marginBottom: "6px" }}>
-                        👑 ระบบรับยศอัตโนมัติ | Emoji Role
+                        {config.panel_title || "👑 ระบบรับยศอัตโนมัติ | Emoji Role"}
                       </div>
-                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px" }}>
-                        ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ <b>{config.server_name || "Server"}</b><br />
-                        กดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨
+                      <div style={{ fontSize: "0.85rem", color: "#DBDEE1", lineHeight: 1.5, marginBottom: "10px", whiteSpace: "pre-wrap" }}>
+                        {(config.panel_description || "ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่ **{server}**\nกดปุ่ม Emoji ด้านล่างข้อความนี้เพื่อรับยศที่คุณต้องการได้ทันที! ✨")
+                          .replace("{server}", config.server_name || "Server")}
                       </div>
 
                       <div style={{

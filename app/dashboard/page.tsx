@@ -290,47 +290,70 @@ export default function DashboardPage() {
       paddingBottom: "80px"
     }}>
       {/* Top Clean Header Navbar */}
-      <header style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "rgba(12, 19, 34, 0.95)",
-        backdropFilter: "blur(14px)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-        padding: "14px 28px"
-      }}>
-        <div style={{
-          maxWidth: "1350px",
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "16px"
-        }}>
-          {/* Brand Logo & Name */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#fff" }}>
+      <header className="role-header">
+        <div className="role-header-inner">
+          {/* Brand Logo & Profile on Mobile (Row 1 on Mobile / Left on Desktop) */}
+          <div className="role-header-brand-row">
+            <Link href="/" className="role-logo-link">
               <Image src={logo} alt="YMM-DEV" width={32} height={32} style={{ borderRadius: "8px" }} />
-              <span style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.01em" }}>YMM-DEV</span>
+              <span className="role-brand-text">YMM-DEV</span>
+              <span className="role-badge">Role Bot</span>
             </Link>
+
+            {/* Profile Avatar Pill on Mobile (compact top-right) */}
+            <div className="role-profile-mobile-wrap">
+              {profile ? (
+                <div className="role-user-pill">
+                  <Image
+                    src={
+                      profile.avatar
+                        ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                        : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+                    }
+                    alt=""
+                    width={22}
+                    height={22}
+                    style={{ borderRadius: "50%" }}
+                    unoptimized
+                  />
+                  <span className="role-user-name">
+                    {profile.globalName || profile.username}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await fetch("/api/auth/logout", { method: "POST" });
+                      setProfile(null);
+                      setConfig((prev) => ({
+                        ...prev,
+                        guild_id: "",
+                        server_name: ""
+                      }));
+                    }}
+                    className="role-logout-btn"
+                    title="ออกจากระบบ"
+                  >
+                    ออก
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href="/api/auth/discord?redirect=/dashboard"
+                  className="role-login-btn"
+                >
+                  Log In
+                </a>
+              )}
+            </div>
           </div>
 
-          {/* Right Actions: Server Selector, Profile & Save Settings Button */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          {/* Controls: Server Selector & Save Button (Row 2 on Mobile / Right on Desktop) */}
+          <div className="role-header-controls-row">
             {/* Live Server Selector Dropdown */}
             {profile && (
               botGuilds.length > 0 && !isCustomServer ? (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "rgba(255, 255, 255, 0.06)",
-                  padding: "6px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)"
-                }}>
-                  <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontWeight: 500 }}>Server:</span>
+                <div className="role-server-select-wrap">
+                  <span className="role-server-label">Server:</span>
                   <select
                     value={config.guild_id}
                     onChange={(e) => {
@@ -346,15 +369,7 @@ export default function DashboardPage() {
                         }));
                       }
                     }}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      color: "#fff",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      outline: "none",
-                      cursor: "pointer"
-                    }}
+                    className="role-server-select"
                   >
                     {botGuilds.map((g) => (
                       <option key={g.id} value={g.id} style={{ background: "#0c1322", color: "#fff" }}>
@@ -367,28 +382,20 @@ export default function DashboardPage() {
                   </select>
                 </div>
               ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255, 255, 255, 0.06)", padding: "6px 12px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-                  <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Server ID:</span>
+                <div className="role-server-select-wrap">
+                  <span className="role-server-label">Server ID:</span>
                   <input
                     type="text"
                     value={config.guild_id}
                     onChange={(e) => setConfig({ ...config, guild_id: e.target.value })}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      color: "#fff",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      width: "150px",
-                      outline: "none"
-                    }}
+                    className="role-server-input"
                     placeholder="ID เซิร์ฟเวอร์..."
                   />
                   {botGuilds.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setIsCustomServer(false)}
-                      style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
+                      className="role-back-btn"
                     >
                       ย้อนกลับ
                     </button>
@@ -397,88 +404,57 @@ export default function DashboardPage() {
               )
             )}
 
-            {/* Profile Avatar Badge */}
-            {profile ? (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(255, 255, 255, 0.06)",
-                padding: "4px 10px",
-                borderRadius: "20px",
-                border: "1px solid rgba(255, 255, 255, 0.1)"
-              }}>
-                <Image
-                  src={
-                    profile.avatar
-                      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
-                      : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
-                  }
-                  alt=""
-                  width={24}
-                  height={24}
-                  style={{ borderRadius: "50%" }}
-                  unoptimized
-                />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await fetch("/api/auth/logout", { method: "POST" });
-                    setProfile(null);
-                    setConfig((prev) => ({
-                      ...prev,
-                      guild_id: "",
-                      server_name: ""
-                    }));
-                  }}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#94a3b8",
-                    fontSize: "0.75rem",
-                    cursor: "pointer"
-                  }}
-                  title="ออกจากระบบ"
+            {/* Profile Avatar Badge on Desktop */}
+            <div className="role-profile-desktop-wrap">
+              {profile ? (
+                <div className="role-user-pill">
+                  <Image
+                    src={
+                      profile.avatar
+                        ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=64`
+                        : `https://cdn.discordapp.com/embed/avatars/${Number(profile.id) % 5}.png`
+                    }
+                    alt=""
+                    width={22}
+                    height={22}
+                    style={{ borderRadius: "50%" }}
+                    unoptimized
+                  />
+                  <span className="role-user-name">
+                    {profile.globalName || profile.username}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await fetch("/api/auth/logout", { method: "POST" });
+                      setProfile(null);
+                      setConfig((prev) => ({
+                        ...prev,
+                        guild_id: "",
+                        server_name: ""
+                      }));
+                    }}
+                    className="role-logout-btn"
+                    title="ออกจากระบบ"
+                  >
+                    ออก
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href="/api/auth/discord?redirect=/dashboard"
+                  className="role-login-btn"
                 >
-                  ออก
-                </button>
-              </div>
-            ) : (
-              <a
-                href="/api/auth/discord?redirect=/dashboard"
-                style={{
-                  background: "#2563EB",
-                  color: "#fff",
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  fontSize: "0.85rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center"
-                }}
-              >
-                Log In Discord
-              </a>
-            )}
+                  Log In Discord
+                </a>
+              )}
+            </div>
 
-            {/* Clean Save Settings Button (Matching screenshot) */}
+            {/* Clean Save Settings Button */}
             <button
               onClick={handleSave}
               disabled={saving || (!loadingAuth && !loadingGuilds && !isAccessible)}
-              style={{
-                background: (saving || (!loadingAuth && !loadingGuilds && !isAccessible))
-                  ? "#334155" 
-                  : "#2563EB",
-                color: "#fff",
-                border: "none",
-                padding: "8px 20px",
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                cursor: (saving || (!loadingAuth && !loadingGuilds && !isAccessible)) ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease"
-              }}
+              className="role-save-btn"
             >
               {saving ? "Saving..." : "Save Settings"}
             </button>
@@ -512,7 +488,7 @@ export default function DashboardPage() {
             padding: "24px",
             minHeight: "520px"
           }}>
-            <div className="role-dashboard-tabs" style={{
+            <div className="role-perm-modal" style={{
               background: "#131d31",
               border: "1px solid rgba(255, 255, 255, 0.1)",
               borderRadius: "20px",
@@ -607,17 +583,7 @@ export default function DashboardPage() {
             )}
 
             {/* Clean Modern Navigation Tabs Bar (Matching Reference Screenshot) */}
-            <div style={{
-              display: "flex",
-              gap: "6px",
-              background: "#131d31",
-              padding: "6px",
-              borderRadius: "14px",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              marginBottom: "24px",
-              overflowX: "auto",
-              WebkitOverflowScrolling: "touch"
-            }}>
+            <div className="role-tabs-bar">
               {[
                 { id: "appearance", label: "🎨 Theme" },
                 { id: "system", label: "⚙️ System" },
@@ -628,23 +594,7 @@ export default function DashboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  style={{
-                    flex: "0 0 auto",
-                    minWidth: "max-content",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    border: "none",
-                    background: activeTab === tab.id ? "rgba(255, 255, 255, 0.12)" : "transparent",
-                    color: activeTab === tab.id ? "#ffffff" : "#94a3b8",
-                    fontWeight: activeTab === tab.id ? 700 : 500,
-                    fontSize: "0.85rem",
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "6px"
-                  }}
+                  className={`role-tab-btn ${activeTab === tab.id ? "is-active" : ""}`}
                 >
                   {tab.label}
                 </button>
@@ -1079,7 +1029,7 @@ export default function DashboardPage() {
                     <span>🔗</span> Add New Role Link
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "48px 1fr 90px", gap: "10px", alignItems: "center" }}>
+                  <div className="role-add-grid">
                     {/* Emoji input square box */}
                     <input
                       type="text"
@@ -1113,7 +1063,8 @@ export default function DashboardPage() {
                           borderRadius: "8px",
                           fontSize: "0.9rem",
                           outline: "none",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          width: "100%"
                         }}
                       >
                         {roles.map((r) => (
@@ -1126,7 +1077,7 @@ export default function DashboardPage() {
                         </option>
                       </select>
                     ) : (
-                      <div style={{ display: "flex", gap: "8px" }}>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         <input
                           type="text"
                           value={customRoleName}
@@ -1134,6 +1085,7 @@ export default function DashboardPage() {
                           placeholder="Role Name"
                           style={{
                             flex: 1,
+                            minWidth: "100px",
                             height: "42px",
                             background: "#0f172a",
                             border: "1px solid rgba(255, 255, 255, 0.12)",
@@ -1151,6 +1103,7 @@ export default function DashboardPage() {
                           placeholder="Role ID"
                           style={{
                             flex: 1,
+                            minWidth: "100px",
                             height: "42px",
                             background: "#0f172a",
                             border: "1px solid rgba(255, 255, 255, 0.12)",
@@ -1168,18 +1121,9 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={addRoleMapping}
-                      style={{
-                        height: "42px",
-                        background: "#2563EB",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        fontSize: "0.9rem"
-                      }}
+                      className="role-add-btn"
                     >
-                      Add
+                      + เพิ่ม
                     </button>
                   </div>
                 </div>
@@ -1187,63 +1131,31 @@ export default function DashboardPage() {
                 {/* Table Header & Existing Mappings List */}
                 <div style={{ marginTop: "10px" }}>
                   {/* Table Header Labels */}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "60px 1.5fr 2fr 70px",
-                    padding: "0 14px 10px 14px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    color: "#64748b",
-                    letterSpacing: "0.05em"
-                  }}>
+                  <div className="role-mapping-header">
                     <span>EMOJI</span>
                     <span>ROLE</span>
                     <span>ID</span>
-                    <span style={{ textAlign: "right" }}></span>
+                    <span style={{ textAlign: "right" }}>ACTION</span>
                   </div>
 
                   {/* Mapping Rows */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {(config.reaction_roles || []).map((item, idx) => (
-                      <div key={idx} style={{
-                        display: "grid",
-                        gridTemplateColumns: "60px 1.5fr 2fr 70px",
-                        alignItems: "center",
-                        background: "#17233c",
-                        padding: "12px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid rgba(255, 255, 255, 0.06)"
-                      }}>
-                        <span style={{ fontSize: "1.3rem" }}>{item.emoji}</span>
-                        <div>
-                          <span style={{
-                            background: "rgba(59, 130, 246, 0.2)",
-                            color: "#60a5fa",
-                            padding: "3px 10px",
-                            borderRadius: "14px",
-                            fontSize: "0.85rem",
-                            fontWeight: 600
-                          }}>
+                      <div key={idx} className="role-mapping-row">
+                        <div className="role-mapping-info">
+                          <span className="role-mapping-emoji">{item.emoji}</span>
+                          <span className="role-mapping-badge">
                             @{item.roleName}
                           </span>
+                          <span className="role-mapping-id">
+                            ID: {item.roleId}
+                          </span>
                         </div>
-                        <div style={{ fontSize: "0.8rem", color: "#94a3b8", fontFamily: "monospace" }}>
-                          ID: {item.roleId}
-                        </div>
-                        <div style={{ textAlign: "right" }}>
+                        <div className="role-mapping-action">
                           <button
                             type="button"
                             onClick={() => removeRoleMapping(idx)}
-                            style={{
-                              background: "rgba(239, 68, 68, 0.2)",
-                              border: "none",
-                              color: "#fca5a5",
-                              padding: "4px 12px",
-                              borderRadius: "6px",
-                              cursor: "pointer",
-                              fontSize: "0.75rem",
-                              fontWeight: 600
-                            }}
+                            className="role-del-btn"
                           >
                             ลบ
                           </button>

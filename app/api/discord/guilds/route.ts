@@ -5,18 +5,6 @@ import { verifyGuildAdmin, verifyUserIsAdmin, checkUserAdminInSession } from "@/
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const ROLE_FALLBACK_TOKEN = Buffer.from(
-  "TVRVME5qUTNOVGcyTURRM09EQXdOVFkyT0EuR19jUHFyLjQ4bG0waG93dk54bTJpTlJBanUwMDQtZWNOVGtXc2QtcFhfa2ZJ",
-  "base64"
-).toString();
-
-const TICKET_FALLBACK_TOKEN = Buffer.from(
-  "TVRVME5qY3pNVGszTnpJM01UWTNOekF3TVEuR0tsNm4yLjhQa3ZVQVc4aS1uOThhSkw5ZDg4SmZKbGlQVllYT1dQcW5qSUtz",
-  "base64"
-).toString();
-
-const TICKET_BOT_TOKEN = (process.env.DISCORD_TICKET_BOT_TOKEN || TICKET_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
-
 async function fetchWithToken(url: string, token: string) {
   return await fetch(url, {
     headers: { Authorization: `Bot ${token}` },
@@ -41,9 +29,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ guilds: [], error: "Unauthorized: กรุณาเข้าสู่ระบบ Discord" }, { status: 401 });
   }
 
-  const activeToken = botType === "ticket"
-    ? TICKET_BOT_TOKEN
-    : (process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_ROLE_BOT_TOKEN || ROLE_FALLBACK_TOKEN).replace(/['"]/g, "").trim();
+  const activeToken = (
+    botType === "ticket"
+      ? (process.env.DISCORD_TICKET_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
+      : (process.env.DISCORD_ROLE_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN || "")
+  ).replace(/['"]/g, "").trim();
+
+  if (!activeToken) {
+    return NextResponse.json(
+      { error: "Server configuration error: bot token missing" },
+      { status: 500 }
+    );
+  }
 
   try {
     // 2. Fetch all guilds the bot is currently in
